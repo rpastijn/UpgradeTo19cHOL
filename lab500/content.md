@@ -5,6 +5,8 @@ In this lab will be show the usage of a new tool called MV2ADB. This tool can, a
 ## Disclaimer ##
 The following is intended to outline our general product direction. It is intended for information purposes only, and may not be incorporated into any contract. It is not a commitment to deliver any material, code, or functionality, and should not be relied upon in making purchasing decisions. The development, release, and timing of any features or functionality described for Oracle’s products remains at the sole discretion of Oracle.
 
+## Lab contents ##
+
 ## Download and install the required tools ##
 
 The script that allows you easy migration to ADB can be downloaded from MyOracle Support through note **2463574.1**. In the Workshop environment we have already downloaded the tool for you in the `/source` directory.
