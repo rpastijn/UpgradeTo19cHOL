@@ -1,33 +1,19 @@
 # Upgrade to 19c Autonomous Database #
 
-Lab 500, version 11.0, Upgrade to 19c HOL, March 2020
+In this lab will be show the usage of a new tool called MV2ADB. This tool can, after completing the configuration file, execute all the steps to export, transport and import a database to the Oracle Autonomous Cloud.
 
-## Contents ##
-
-- Disclaimer
-- Download and install required tools
-	- Install the MV2ADB script
-	- Check previously downloaded and installed Oracle Instant Client
-	- Creating a new Autonomous ATP environment
-- Create an Object Store Bucket
-- Check Source schemas for compatibility
-	- Package Source already downloaded
-- Gathering required details
-	- Gathering (source) DB Parameters
-	- Gathering Expdp/Impdp Parameters
-	- Gathering Object Store Properties
-	- Gathering ADB Parameters
-- Start the migration using the MV2ADB script
-- Login and check the migrated database
- 
 ## Disclaimer ##
 The following is intended to outline our general product direction. It is intended for information purposes only, and may not be incorporated into any contract. It is not a commitment to deliver any material, code, or functionality, and should not be relied upon in making purchasing decisions. The development, release, and timing of any features or functionality described for Oracle’s products remains at the sole discretion of Oracle.
 
 ## Download and install the required tools ##
 
-In this lab will be show the usage of a new tool called MV2ADB. This tool can, after completing the configuration file, execute all the steps to export, transport and import a database to the Oracle Autonomous Cloud.
+The script that allows you easy migration to ADB can be downloaded from MyOracle Support through note **2463574.1**. In the Workshop environment we have already downloaded the tool for you in the `/source` directory.
 
 ### Install the MV2ADB script ###
+The MV2ADB tool is an .rpm package and needs to be installed as the root user.
+
+`````<copy>This is a copy example</copy>`````
+
 The script that allows you easy migration to ADB can be downloaded from MyOracle Support through note **2463574.1**. In the Workshop environment we have already downloaded the tool for you in the `/source` directory.
 
 > INSTALL THE MV2ADB TOOL AS ROOT USER
