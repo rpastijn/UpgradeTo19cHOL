@@ -191,6 +191,7 @@ Please use your tool of choice (vi, desktop Text Editor etc) to create a new fil
 or
 [oracle@ws ~]$ sudo gedit /opt/mv2adb/conf/ATP.mv2adb.conf
 Cut-and-paste the below parameters in this new document so that we can start entering the required data. At this moment, only copy-and-paste the below, we will make changes to the values in the following sections.
+````
 # DB Parameters
 DB_CONSTRIG=//localhost:1521/DB112
 SYSTEM_DB_PASSWORD=53152A9726C00647158CD4B1E103F1F2
@@ -214,6 +215,7 @@ BMC_PASSWORD=
 ADB_NAME=
 ADB_PASSWORD=
 CFILE=
+````
 GATHERING (SOURCE) DB PARAMETERS
 The initial section is regarding the source database. Please enter the following information for the source environment. Since this is a Lab environment, we have pre-entered most of the DB parameters for you. Here is some information where you can find the details:
 DB_CONSTRIG	Connecting string from the local system (where mv2adb is running) to the database instance that needs to be migrated
@@ -239,9 +241,11 @@ Please re-enter the password : Welcome_123
 53152A9726C00647158CD4B1E103F1F2
 Make sure YOUR encrypted password is entered in your new config file.
 Example:
+````
 # Expdp/Impdp Parameters 
 ENC_PASSWORD=53152A9729(..)647158CD4B1E103F1F2
 ENC_TYPE=AES256
+````
 GATHERING OBJECT STORE PROPERTIES
 The Autonomous database can only use dumpfiles uploaded to Swift compatible storage. The following parameters specify where the dumpfiles should be uploaded to after the export. This is also the location where the logfiles will be stored. Instead of the below SWIFT details, you can also choose to locally install the OCI Client and use that setup. See the example config for more information.
 BMC_HOST	This is the Swift object storage URL for your environment. It usually has the form of https://swiftobjectstorage.<region>.oraclecloud.com where region is us-phoenix-1, eu-frankfurt-1 or similar
@@ -261,12 +265,14 @@ Please re-enter the password : <cut-and-paste auth_key>
 E54C941DA0DBA8EB467DCC7F0C04(...)ED747D3AF6B6184BC173B78DE426CEBE4
  FILL IN ALL OF THE DETAILS FOR THE OBJECT STORE SETTINGS
 Example (fill in our OWN details):
+````
 # Object Store Properties 
 BMC_HOST=https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com
 BMC_TENNANT=oraclepartnersas
 BMC_BUCKET=ATP-MyInitials
 BMC_ID=ADB-<city>-<date>
 BMC_PASSWORD= E54C941DA0DBA8EB467DCC7F0C04(...)ED747D3AF6B6184BC173B78DE426CEBE4
+````
 GATHERING ADB PARAMETERS
 During the gathering of the other parameters, your ADB environment should have been created. As a last step we will now gather the information needed for the last section
 ADB_NAME	Name of your ADB instance. 
@@ -293,12 +299,15 @@ In the following screen a password is requested. This is the password that prote
  
  ENTER RANDOM PASSWORD AND PRESS 'DOWNLOAD'
 Your zipfile will be downloaded to the default location /home/oracle/Downloads. Please note the name of the wallet.zip and enter this in your parameters.
+````
 # ADB Parameters 
 ADB_NAME=ATPINIT
 ADB_PASSWORD= DE3D105A8E6F6A4D5E8XXXSW6BC1D3BA
 CFILE=/home/oracle/Downloads/Wallet_ATPINIT.zip
+````
  MAKE SURE ALL PARAMETERS ARE ENTERED AND SAVE THE FILE TO /HOME/ORACLE/ATP.MV2ADB.CFG
 The following is an example file for the MV2ADB setup:
+````
 # DB Parameters
 DB_CONSTRIG=//localhost:1521/DB112
 SYSTEM_DB_PASSWORD=53152A9726C00647158CD4B1E103F1F2
@@ -322,6 +331,7 @@ BMC_PASSWORD=E54C941DA0DXXXB467DCC7F0C04A07ED747D3AF6B6184BC173B78DE426CEBE4
 ADB_NAME=ATPINIT
 ADB_PASSWORD=DE3D105A8E6F6AXXXE86E4C06BC1D3BA
 CFILE=/home/oracle/Downloads/Wallet_<DBNAME>.zip
+````
  MAKE SURE ALL PARAMETERS ARE CORRECT, SAVE THE FILE AND EXIT THE EDITOR
 The file should be in the /opt/mv2adb/conf directory and is called ATP.mv2adb.conf
 [oracle@ws ~]$ ls -l /opt/mv2adb/conf
