@@ -12,7 +12,9 @@ The script that allows you easy migration to ADB can be downloaded from MyOracle
 ### Install the MV2ADB script ###
 The MV2ADB tool is an .rpm package and needs to be installed as the root user.
 
-`````<copy>This is a copy example</copy>`````
+````
+[oracle@ws ~]$ <copy>sudo yum -y localinstall /source/mv2adb*.rpmimport oml</copy>
+````
 
 The script that allows you easy migration to ADB can be downloaded from MyOracle Support through note **2463574.1**. In the Workshop environment we have already downloaded the tool for you in the `/source` directory.
 
