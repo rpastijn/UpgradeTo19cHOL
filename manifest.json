@@ -1,0 +1,16 @@
+{
+    "tutorials": [
+        {
+            "title": "Workshop Overview",
+            "description":"Workhop Overview",
+            "publisheddate": "01/15/2020",
+            "filename":"./about-the-workshop/content.md"
+        },
+        {
+            "title": "Lesson 02: Setup the Lab Environment",
+            "description":"Setup the Lab Environment",
+            "publisheddate": "01/15/2020",
+            "filename":"./chapter01/content.md"
+        }
+    ]
+}
