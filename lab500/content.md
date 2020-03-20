@@ -19,23 +19,43 @@ The MV2ADB tool is an .rpm package and needs to be installed as the root user.
 ````
 You should see a similar output:
 
-    Loaded plugins: langpacks, ulninfo
-    Examining /source/mv2adb-2.0.1-40.noarch.rpm: mv2adb-2.0.1-40.noarch
-    Marking /source/mv2adb-2.0.1-40.noarch.rpm to be installed
-    Resolving Dependencies
-    --> Running transaction check
-    ---> Package mv2adb.noarch 0:2.0.1-40 will be installed
-    ...
-    Installing : mv2adb-2.0.1-40.noarch 1/1
+````
+Loaded plugins: langpacks, ulninfo
+Examining /source/mv2adb-2.0.1-80.noarch.rpm: mv2adb-2.0.1-80.noarch
+Marking /source/mv2adb-2.0.1-80.noarch.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package mv2adb.noarch 0:2.0.1-80 will be installed
+--> Finished Dependency Resolution
 
-    MV2ADB has been installed on /opt/mv2adb succesfully!
+==========================================================================================
+ Package            Arch            Version        Repository                       Size
+==========================================================================================
+Installing:
+ mv2adb             noarch          2.0.1-80       /mv2adb-2.0.1-80.noarch          273 k
 
-    Verifying : mv2adb-2.0.1-40.noarch 1/1
+Transaction Summary
+==========================================================================================
+Install  1 Package
 
-    Installed:
-    mv2adb.noarch 0:2.0.1-40
+Total size: 273 k
+Installed size: 273 k
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : mv2adb-2.0.1-80.noarch                                                 1/1
 
-    Complete!
+MV2ADB has been installed on /opt/mv2adb succesfully!
+
+  Verifying  : mv2adb-2.0.1-80.noarch                                                 1/1
+
+Installed:
+  mv2adb.noarch 0:2.0.1-80
+
+Complete!
+````
 
 Please note that the install script shows the location where the tool has been installed. In this case **`/opt/mv2adb`**. We need this later in the Lab.
 
@@ -51,7 +71,7 @@ $ <copy>ls -l /opt/instantclient/19.6/</copy>
 
 Output similar to the following should be visible:
 
-    [oracle@upgradews-4 ~]$ ls -l /opt/instantclient/18.3/
+    [oracle@upgradews-4 ~]$ ls -l /opt/instantclient/19.6/
     total 235040
     -rwxr-xr-x 1 oracle oinstall 40617 Jun 28 2018 adrci
     -rw-r--r-- 1 oracle oinstall 1317 Jun 28 2018 BASIC_README
@@ -120,15 +140,254 @@ The MV2ADB tool can create the required Object Store Bucket as part of the execu
 
 ### Navigate to the Object Storage menu in the OCI Console ###
 
+Execute the following steps:
 
+- Make sure you are logged into the OCI Cloud console
+- Use the left side menu (stacked menu or hamburger menu)
+- Navigate to the Object Storage menu
+- Make sure you are working in the correct region
+- Make sure you have selected the correct compartment
 
- NAVIGATE TO OBJECT STORAGE IN THE OCI CONSOLE
+To create a new bucket (which behaves similar to a subdirectory in a filesystem), click on the blue **'Create Bucket'** button. A 'Create Bucket' window will be displayed where you can enter the Bucket name.
+
+- Do not use the default name
+- Enter a unique name that you can remember
+	- Like 'Upgrade-<Your Initials>'
+- Make sure you store the bucket name somewhere
+	- Copy/paste it on a notepad or piece of papier
+	- The name of the bucket is case sensitive
+	- We need this name in the configuration file for MV2ADB
+
+## Gather parameters and create the MV2ADB config file ##
+
+The MV2ADB script needs input parameters so that it can identify the source database, the schemas to be migrated and the destination system. In the following sections, we will go through the minimum required parameters needed for this lab and the migration. 
+
+For additional parameters, please check the MV2ADB documentation in the MOS note.
+
+### Create the initial configuration file ###
+
+In this section will we create an initial configuration file. Some parameters have already been filled with values, some values you will need to gather and enter. We will create an empty config file using a text editor. 
+
+Text editing on the supplied Linux image can be done using any tool you know in the image like `vi` (for people who know how vi works) or for example `gedit` which works similar to Notepad in a Windows environment. In all examples in this Lab where you see `vi` used, you can replace `vi` by `gedit`.
+
+If you are currently not logged in as the root user, execute the following command:
+````
+$ <copy>sudo -s</copy>
+````
+
+Create the new configuration file by executing the following command:
+````
+# <copy>vi /opt/mv2adb/conf/atp.mv2adb.cfg</copy>
+````
+
+Cut-and-paste the following default setup file in the new config file:
+````
+<copy>
+# DB Parameters
+DB_CONSTRIG=//localhost:1521/DB112
+SYSTEM_DB_PASSWORD=53152A9726C00647158CD4B1E103F1F2
+SCHEMAS=PARKINGFINE
+DUMPFILES=/tmp/DB112-ATP.dmp
+OHOME=/u01/app/oracle/product/11.2.0/dbhome_112
+ICHOME=/opt/instantclient/19.6
+
+# Expdp/Impdp Parameters
+ENC_PASSWORD=53152A9726C00647158CD4B1E103F1F2
+ENC_TYPE=AES256
+
+# Object Store Properties
+BMC_HOST=
+BMC_TENNANT=
+BMC_BUCKET=
+BMC_ID=
+BMC_PASSWORD=
+
+# ADB Parameters
+ADB_NAME=
+ADB_PASSWORD=
+CFILE=
+</copy>
+````
+
+In the next sections we will locate the required parameters and put them in this config file. Please keep this config file open but save it on a regular basis so that no information is lost if something goes wrong. If you need to access the Operating System, please open a second terminal window.
+
+### Gather the (Source) DB Parameters ###
+
+The initial section is regarding the source database. Since this is a Lab environment, we know what the connection details are and which schema we want to migrate. In a regular setup, you need to change the options to your settings.
+
+Here is some information where you can find the details:
+
+- **DB_CONSTRIG**
+	- Connecting string from the local system (where mv2adb is running) to the database instance that needs to be migrated
+- **SYSTEM_DB_PASSWORD**
+	- Password for SYSTEM user for this source database
+- **SCHEMAS**
+	- Schema's to be exported
+	- Only transport the schema's that you need, do not include any default schema's like HR, OE, SYSTEM, SYS etc as they already exist in ADB and might result in errors (or get ignored)
+- **DUMPFILES**
+	- File system location of dumpfiles. 
+	- If you want parallelism during export and import, specify as many files as you want the parallelism to be.
+	- Make sure the files are unique in the source but also in the destination (ATP) environment.
+- **OHOME**
+	- The source database Oracle Home
+- **IHOME**
+	- The installed Oracle Instant Client home (basic, SQL*Plus and Tools unzipped)
+
+### Gathering Expdb/Impdb parameters ###
+
+The MV2ADB tool only allows you to transport encrypted dumpfiles to the OCI Cloud to make sure your data cannot be compromised when exporting and uploading your data. In this section of the config file, you need to specify the password and the encryption type. We have already entered a password and encryption type for you.
+
+- **ENC_PASSWORD**
+	- A password that will encrypt your datapump exports. 
+	- It has nothing to do with any existing user or password. 
+	- Please note that this password cannot be plain text, it needs to be encrypted
+- **END_TYPE**
+	- Type of encryption of your data. 
+	- The higher the number, the more encryption but also slower export/import. 
+	- Options are  **AES128**, **AES192** and **AES256**
+
+In case you want to specify your own password, you need will need to encrypt this password using the MV2ADB tooling. For this, the command `encpwd` has been created.
+
+Example: If your encryption password is 'Welcome_123', you would need to execute the following command:
+
+````
+# <copy>/opt/mv2adb/mv2adb encpass</copy>
+````
+
+After this, you enter the password your want to encrypt (twice) and the encrypted value will be displayed:
+
+    Please enter the password :
+    Please re-enter the password :
+    53152A9726C00647158CD4B1E103F1F2
+
+### Gathering Object Store properties ###
+
+The MV2ADB script can currently only work with .dmp dumpfiles using the Swift compatible interface and Swift compatible storage. The parameters in the 'Object Store Properties' section specify where the dumpfiles should be uploaded to after the export and imported from during the import. This location is also where the logfiles of the impdp process will be stored.
+
+If the OCI Command Line Interface (OCI CLI) is installed on the MV2ADB server, you do not need to enter the Swift compatible details. See the example config in the documentation for more information.
+
+- **BMC_HOST**
+	- This is the Swift object storage URL for your environment. 
+	- It usually has the form of `https://swiftobjectstorage.<region>.oraclecloud.com` 
+	- Region is **`us-phoenix-1`**, **`eu-frankfurt-1`** or similar. Please check your hand-out for details
+- **BMC_TENNANT**
+	- Name of your Tenancy. 
+	- Be aware, for SWIFT we only use lower case naming
+- **BMC_BUCKET**
+	- The name of an object storage bucket that will be used for this migration. 
+	- In the previous section you pre-created a bucket with a unique name.
+- **BMC_ID**
+	- Your username in OCI
+	- Example: ADB-<city>-<date>
+- **BMC_PASSWORD**
+	- This is NOT the console password for your user !
+	- The Swift interface needs a so-called Authentication Token
+	- This Auth Token is user specific and would normally be generated by you
+	- In this workshop, we have already generated the Auth Token for you.
+
+Before we can enter all information into our configuration file, we need to encrypt the Swift Authentication Token using the mv2adb password encoder. The clear-text value of the generated Auth token can be found in the Object storage bucket in your compartment. Locate the file in the **`Lab-Artifacts-<xxx>`** bucket.
+
+- Navigate to the Object Storage section of OCI
+- Click on your Lab-Artifacts-<xx> bucket
+- Locate the file called auth_token.txt
+- Click on the stacked menu for the file and choose 'Object Details'
+	- The Authentication Token will be displayed and consists of 20 random characters.
+
+We can now encrypt the Authentication Token by running the mv2adb password encoder.
+
+````
+# <copy>/opt/mv2adb/mv2adb encpass</copy>
+````
+
+- Select the 20 characters of the Authentication Token in your console screen
+	- Right click your mouse and select Copy
+- Navigate to the terminal window where the `mv2adb` script is waiting for input
+	- Paste the copied value twice (and press enter if needed after every paste action)
+
+````
+Please enter the password : <cut-and-paste auth_key>
+Please re-enter the password : <cut-and-paste auth_key>
+765B5FDA9F3F6110E7AB9E7D808612B3E38DA130FBCC2E3C0535DA923DF46CDF
+````
+
+Now that we have the last value we need for the Object Store settings, please enter the required information into the Object Store Properties section of the configuration file. Below is an **example** of the configuration file.
+
+**Please do not copy these values, use your own values to complete YOUR file**
+
+````
+# Object Store Properties 
+BMC_HOST=https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com
+BMC_TENNANT=oraclepartnersas
+BMC_BUCKET=ATP-MyInitials
+BMC_ID=ADB-<city>-<date>
+BMC_PASSWORD= 765B5FDA9F3F6110E7AB9E7D....12B3E38DA130FBCC2E3C0535DA923DF46CDF
+````
+
+### Gathering the ADB Parameters ###
+
+During the gathering of the other parameters, your ADB environment should have been created. As a last step we will now gather the information needed for the last section in your configuration file:
+
+- **ADB_NAME**
+	- Name of your ADB instance
+	- This is the **Database Name** and NOT the **Display Name** 
+- **ADB_PASSWORD**
+	- Database ADMIN password
+	- Encrypted using the mv2adb tool
+- **CFILE**
+	- Zipfile containing database credentials
+	 
+**First parameter** requires the name of your created ADB environment. 
+- Navigate to the ADB Console and find the name of your database. 
+- This should be the 'Database Name' value and not the 'Display Name' value
+- Enter the Database Name value into the configuration file
  
- CREATE A NEW BUCKET WITH A UNIQUE NAME
- 
-Write down the name of the bucket as we will need it in our configuration file. The name of the bucket in the configuration file is case-sensitive.
-CHECK SOURCE SCHEMAS FOR COMPATIBILITY
+**Second parameter** is the password you have entered while creating the Autonomous environment. 
+- If you have used the suggested password, it would be OraclePTS#2019. 
+	- If you have chosen another password, you now need to remember it
+- Encrypt the database password using the `/opt/mv2adb/mv2adb encpass` command
+- Enter the result innto your configuration file
+
+**Third parameter** requires a download from the OCI console for this Autonomous Database, the so-called Wallet file.
+- Navigate to the Autonomous Database you have created
+- Click on the Display name of the database and display the details for the instance
+- Click on the DB Connection button next to the green 'ATP' image
+- Select Wallet type = Instance Wallet
+	- Click on Download Wallet
+	- In the following screen a password is requested. 
+	- This is the password that protects the keystore inside the zipfile. 
+	- For this exercise we will not be using this keystore so enter **any random password** twice.
+	- Your zipfile will be downloaded to the default location `/home/oracle/Downloads`. 
+- Please note the exact name and location of the wallet.zip and enter this in your parameters.
+
+Example values for the ADB Parameters section:
+
+**Please do not copy these values, use your own values to complete YOUR file**
+
+````
+# ADB Parameters 
+ADB_NAME=ATPINIT
+ADB_PASSWORD= DE3D105A8E6F6A4D5E8XXXSW6BC1D3BA
+CFILE=/home/oracle/Downloads/Wallet_ATPINIT.zip
+````
+
+#### Make sure all parameters have a value and save the file ####
+
+The file should be in the `/opt/mv2adb/conf` directory and is called `ATP.mv2adb.conf`
+
+````
+# <copy>ls -l /opt/mv2adb/conf</copy>
+````
+
+````
+total 12
+-rw-r--r-- 1 root root  471 May 17 13:13 ATP.mv2adb.conf
+-rwxr-xr-x 1 root root 5159 Dec 28 12:52 DBNAME.mv2adb.cfg
+````
+
+## Check Source schema(s) for compatibility ##
+
 Not everything is supported in the Autonomous Database Cloud environment. To make sure you do not run into any issues, a tool called ADB Schema Advisor has been created. This PL/SQL Package can generate a report to show you any issues you might encounter before you actually execute the migration
+
 PACKAGE SOURCE ALREADY DOWNLOADED
 The ADB Schema advisor can be downloaded from MOS note 2462677.1 (Oracle Autonomous Database Schema Advisor). We have already downloaded the latest version to the /source directory in your client image.
 Please note; in a regular environment, this package does not require SYS or SYSTEM user to be used. When installing it into a non-SYS and non-SYSTEM user, please check the manual for the exact installation steps. Very important are the GRANT statements required to give the package access to the information it needs.
@@ -218,128 +477,10 @@ ADB_NAME=
 ADB_PASSWORD=
 CFILE=
 ````
-GATHERING (SOURCE) DB PARAMETERS
-The initial section is regarding the source database. Please enter the following information for the source environment. Since this is a Lab environment, we have pre-entered most of the DB parameters for you. Here is some information where you can find the details:
-DB_CONSTRIG	Connecting string from the local system (where mv2adb is running) to the database instance that needs to be migrated
-SYSTEM_DB_PASSWORD	Password for SYSTEM user for this source database
-SCHEMAS	Schema's to be exported; only transport the schema's that you need, do not include any default schema's like HR, OE, SYSTEM, SYS etc as they already exist in ADB and might result in errors (or get ignored)
-DUMPFILES	File system location of dumpfiles. If you want parallelism during export and import, specify as many files as you want the parallelism to be. Make sure the files are unique in the source but also in the destination (ATP) environment.
-OHOME	The source database Oracle Home
-IHOME	The installed Oracle Instant Client home (basic, SQL*Plus and Tools unzipped)
- MAKE SURE THE VALUE FOR THE DUMPFILES IS UNIQUE IN YOUR NEW CONFIG FILE
- CHANGE THE <INITIALS> IN THE DUMPFILES TO A UNIQUE VALUE
-DUMPFILES=/tmp/DB112-<INITIALS>.dmp
-GATHERING EXPDP/IMPDP PARAMETERS 
-In this section you specify the encryption password and the encryption type for your export. To make sure your data cannot be compromised when exporting and uploading your data, the script requires a password.
-ENC_PASSWORD	A password that will encrypt your datapump exports. Has nothing to do with any existing user or password. Please note that this password cannot be plain text. The password needs to be encrypted using the mv2adb binaries on your system
-END_TYPE	Type of encryption of your data. The higher the number, the more encryption but also slower export/import. Options are  AES128, AES192 and AES256
- ENCRYPT THE ENCRYPTION PASSWORD AND PUT IT IN THE FILE
-The password we will use for this Lab is Welcome_123.
-[oracle@upgradews conf]$ /opt/mv2adb/mv2adb encpass
 
-Please enter the password : Welcome_123
-Please re-enter the password : Welcome_123
 
-53152A9726C00647158CD4B1E103F1F2
-Make sure YOUR encrypted password is entered in your new config file.
-Example:
-````
-# Expdp/Impdp Parameters 
-ENC_PASSWORD=53152A9729(..)647158CD4B1E103F1F2
-ENC_TYPE=AES256
-````
-GATHERING OBJECT STORE PROPERTIES
-The Autonomous database can only use dumpfiles uploaded to Swift compatible storage. The following parameters specify where the dumpfiles should be uploaded to after the export. This is also the location where the logfiles will be stored. Instead of the below SWIFT details, you can also choose to locally install the OCI Client and use that setup. See the example config for more information.
-BMC_HOST	This is the Swift object storage URL for your environment. It usually has the form of https://swiftobjectstorage.<region>.oraclecloud.com where region is us-phoenix-1, eu-frankfurt-1 or similar
-BMC_TENNANT	Name of your Tenancy. Be aware, for SWIFT we only use lower case
-BMC_BUCKET	The name of an object storage bucket that will be used for this migration. You should have pre-created a bucket with a unique name UPGRADEBUCKET-<INITIALS>
-BMC_ID	Your username in OCI (like ADB-<city>-<date>)
-BMC_PASSWORD	The Swift Authentication Token encrypted using the mv2adb password encoder. The SWIFT authentication code can be found in your Workshop environment under /home/oracle/labs/keys
- LOCATE THE SWIFT AUTHENTICATION PASSWORD AND ENCRYPT USING THE MV2ADB TOOL
-[oracle@ws ~]$ cat /home/oracle/auth_token.txt
-loU5h0}(xxx)v(1.LcoPL
 
-[oracle@ws ~]$ /opt/mv2adb/mv2adb encpass
 
-Please enter the password : <cut-and-paste auth_key>
-Please re-enter the password : <cut-and-paste auth_key>
-
-E54C941DA0DBA8EB467DCC7F0C04(...)ED747D3AF6B6184BC173B78DE426CEBE4
- FILL IN ALL OF THE DETAILS FOR THE OBJECT STORE SETTINGS
-Example (fill in our OWN details):
-````
-# Object Store Properties 
-BMC_HOST=https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com
-BMC_TENNANT=oraclepartnersas
-BMC_BUCKET=ATP-MyInitials
-BMC_ID=ADB-<city>-<date>
-BMC_PASSWORD= E54C941DA0DBA8EB467DCC7F0C04(...)ED747D3AF6B6184BC173B78DE426CEBE4
-````
-GATHERING ADB PARAMETERS
-During the gathering of the other parameters, your ADB environment should have been created. As a last step we will now gather the information needed for the last section
-ADB_NAME	Name of your ADB instance. 
-ADB_PASSWORD	Database ADMIN password
-CFILE	Zipfile containing database credentials
-First parameter requires the name of your created ADB environment. Navigate to the ADB Console and find the name of your database. This should be the 'DATABASE NAME' and not the 'Name' column:
- 
-Second parameter is the password you have entered while creating the Autonomous environment. If you have used the suggested password, it would be OraclePTS#2019. If you have chosen another password, you need to remember it.
- ENCRYPT YOUR DATABASE PASSWORD USING THE MV2ADB ENCRYPT OPTION
-[oracle@upgradews-4 conf]$ /opt/mv2adb/mv2adb encpass
-
-Please enter the password : <Your-Admin-Password>
-Please re-enter the password : <Your-Admin-Password>
-DE3D105A8E6F6A4D5E86EXSW6BC1D3BA
-For the 3rd parameter we need to download something from the OCI console, the so-called Wallet file.
- NAVIGATE TO THE DETAILS OF YOUR ADB ENVIRONMENT
-The result should be similar to this:
- 
- CLICK ON THE BUTTON 'DB CONNECTION'
-The following screen will be displayed:
- 
- CLICK ON THE BUTTON 'DOWNLOAD' TO DOWNLOAD THE WALLET ZIP
-In the following screen a password is requested. This is the password that protects the keystore inside the zipfile. For this exercise we will not be using this keystore so enter any random password twice.
- 
- ENTER RANDOM PASSWORD AND PRESS 'DOWNLOAD'
-Your zipfile will be downloaded to the default location /home/oracle/Downloads. Please note the name of the wallet.zip and enter this in your parameters.
-````
-# ADB Parameters 
-ADB_NAME=ATPINIT
-ADB_PASSWORD= DE3D105A8E6F6A4D5E8XXXSW6BC1D3BA
-CFILE=/home/oracle/Downloads/Wallet_ATPINIT.zip
-````
- MAKE SURE ALL PARAMETERS ARE ENTERED AND SAVE THE FILE TO /HOME/ORACLE/ATP.MV2ADB.CFG
-The following is an example file for the MV2ADB setup:
-````
-# DB Parameters
-DB_CONSTRIG=//localhost:1521/DB112
-SYSTEM_DB_PASSWORD=53152A9726C00647158CD4B1E103F1F2
-SCHEMAS=PARKINGFINE
-DUMPFILES=/tmp/DB112-RP.dmp
-OHOME=/u01/app/oracle/product/11.2.0/dbhome_112
-ICHOME=/opt/instantclient/18.3
-
-# Expdp/Impdp Parameters
-ENC_PASSWORD=53152A9726C00647158CD4B1E103F1F2
-ENC_TYPE=AES256
-
-# Object Store Properties
-BMC_HOST=https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com
-BMC_TENNANT=oraclepartnersas
-BMC_BUCKET=UPGRADEBUCKET-<INITIALS>
-BMC_ID=ADB-<CITY>-<DATE>
-BMC_PASSWORD=E54C941DA0DXXXB467DCC7F0C04A07ED747D3AF6B6184BC173B78DE426CEBE4
-
-# ADB Parameters
-ADB_NAME=ATPINIT
-ADB_PASSWORD=DE3D105A8E6F6AXXXE86E4C06BC1D3BA
-CFILE=/home/oracle/Downloads/Wallet_<DBNAME>.zip
-````
- MAKE SURE ALL PARAMETERS ARE CORRECT, SAVE THE FILE AND EXIT THE EDITOR
-The file should be in the /opt/mv2adb/conf directory and is called ATP.mv2adb.conf
-[oracle@ws ~]$ ls -l /opt/mv2adb/conf
-total 12
--rw-r--r-- 1 root root  471 May 17 13:13 ATP.mv2adb.conf
--rwxr-xr-x 1 root root 5159 Dec 28 12:52 DBNAME.mv2adb.cfg
 START THE MIGRATION USING THE MV2ADB SCRIPT
 Now we can start the actual migration by starting the MV2ADB tool using the proper options.
  START THE MV2ADB SCRIPT USING THE CONFIGURATIONFILE YOU JUST CREATED
