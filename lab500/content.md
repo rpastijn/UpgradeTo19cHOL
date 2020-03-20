@@ -5,6 +5,36 @@ In this lab will be show the usage of a new tool called MV2ADB. This tool can, a
 ## Disclaimer ##
 The following is intended to outline our general product direction. It is intended for information purposes only, and may not be incorporated into any contract. It is not a commitment to deliver any material, code, or functionality, and should not be relied upon in making purchasing decisions. The development, release, and timing of any features or functionality described for Oracle’s products remains at the sole discretion of Oracle.
 
+## Prerequisites ##
+
+- You have access to the Upgrade to a 19c Hands-on-Lab client image
+- A new 19c database has been created in this image
+- All databases in the image are running
+
+When in doubt or need to start the databases, please login as **oracle** user and execute the following command:
+
+````
+$ <copy>. oraenv</copy>
+````
+Please enter the SID of the 19c database that you have created in the first lab. In this example, the SID is **`19C`**
+````
+ORACLE_SID = [oracle] ? DB19C
+The Oracle base has been set to /u01/app/oracle
+````
+Now execute the command to start all databases listed in the `/etc/oratab` file:
+
+````
+$ </copy>dbstart $ORACLE_HOME</copy>
+````
+
+The output should be similar to this:
+````
+Processing Database instance "DB112": log file /u01/app/oracle/product/11.2.0/dbhome_112/rdbms/log/startup.log
+Processing Database instance "DB121C": log file /u01/app/oracle/product/12.1.0/dbhome_121/rdbms/log/startup.log
+Processing Database instance "DB122": log file /u01/app/oracle/product/12.2.0/dbhome_122/rdbms/log/startup.log
+Processing Database instance "DB18C": log file /u01/app/oracle/product/18.1.0/dbhome_18c/rdbms/log/startup.log
+````
+
 ## Download and install the required tools ##
 
 The script that allows you easy migration to ADB can be downloaded from MyOracle Support through note **2463574.1**. In the Workshop environment we have already downloaded the tool for you in the `/source` directory.
@@ -116,15 +146,17 @@ Since Oracle has several regions in the world to host the databases and your adm
 
 By clicking on the blue 'Create Autonomous Database' button, the wizard will display that helps you with the creation. Enter the following values for your new database:
 
-    Workload Type : Autonomous Transaction Processing
-    Compartment	  : <keep value>
-    Display Name  : ATP-<your-name>
-    Database Name : ATP<your-initials>
-    CPU Core Count: 1
-    Storage (TB)  : 1
-    Autoscaling   : unchecked
-    Password      : OraclePTS#2019
-    License Type  : BYOL or 'My Organization Already owns Oracle Database (etc..)'
+    Workload Type    : Autonomous Transaction Processing
+    Compartment	     : <keep value>
+    Display Name     : ATP-<your-name>
+    Database Name    : ATP<your-initials>
+    Database version : 19c
+    CPU Core Count   : 1
+    Storage (TB)     : 1
+    Autoscaling      : unchecked
+    Password         : OraclePTS#2019
+    Network Access   : Allow secure access from everywhere
+    License Type     : Bring Your Own License (BYOL)
 
 After this, click on the **'Create Autonomous Database'** button to start the process. This process should not take more than a few minutes to complete. 
 
@@ -384,148 +416,218 @@ total 12
 
 ## Check Source schema(s) for compatibility ##
 
-Not everything is supported in the Autonomous Database Cloud environment. To make sure you do not run into any issues, a tool called ADB Schema Advisor has been created. This PL/SQL Package can generate a report to show you any issues you might encounter before you actually execute the migration
+Not everything is supported in the Autonomous Database Cloud environment. To make sure you do not run into any issues, a tool called ADB Schema Advisor has been created. This tool, initially a stand-alone PL/SQL Package and available on MyOracle Support, has been integrated into the MV2ADB tool. It can generate a report to show you any issues you might encounter before you actually execute the migration.
 
-PACKAGE SOURCE ALREADY DOWNLOADED
-The ADB Schema advisor can be downloaded from MOS note 2462677.1 (Oracle Autonomous Database Schema Advisor). We have already downloaded the latest version to the /source directory in your client image.
-Please note; in a regular environment, this package does not require SYS or SYSTEM user to be used. When installing it into a non-SYS and non-SYSTEM user, please check the manual for the exact installation steps. Very important are the GRANT statements required to give the package access to the information it needs.
- LOG INTO YOUR SOURCE 11.2 DATABASE AS SYS USER AND INSTALL THE ADB SCHEMA ADVISOR PACKAGE
-[oracle@upgradews ~]$ . oraenv
-ORACLE_SID = [oracle] ? DB112
-The Oracle base remains unchanged with value /u01/app/oracle
-
-[oracle@upgradews ~]$ sqlplus / as sysdba
-
-
-SQL*Plus: Release 11.2.0.4.0 Production on Wed Apr 17 10:13:19 2019
-
-Copyright (c) 1982, 2013, Oracle.  All rights reserved.
-
-
-Connected to:
-Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
-With the Partitioning option
-
-SQL> @/source/adb_advisor.plb
-
-Package created.
-
-
-Package body created.
-
- EXECUTE THE ADB SCHEMA ADVISOR FOR SCHEMA HR
-SQL> set serveroutput on
-SQL> set linesize 1000
-SQL> exec adb_advisor.report('HR','ATP')
-
-The following is the first part of the possible output:
- 
-As you can see, there are some directory objects that cannot be migrated as ADB does not support access to the local filesystem (besides the DP_DUMP_DEST directory).
-A second issue are 7 tables that apparently need changes before they can be imported. A little bit further down in the report, the issues are explained:
-•	NOLOGGING options will be automatically changed to LOGGING options
-•	Index Organized Tables (IOT) are not supported. You need a special option for IMPDP to change this during import.
- EXECUTE THE ADB SCHEMA ADVISOR FOR SCHEMA PARKINGFINE
- SQL> exec adb_advisor.report('PARKINGFINE','ATP')
-
-    ======================================================================================
-    == ATP SCHEMA MIGRATION REPORT FOR PARKINGFINE
-    ========================================================================    ==============
-    --------------------------------------------------------------------------------------
-    -- ATP MIGRATION SUMMARY
-    --------------------------------------------------------------------------------------
-                                                               Objects             Total
-                               Object          Objects         Migrated        Objects
-    Object Type                Count           Not Migrated    With Changes    Migrated
-    -------------------------  --------------  --------------  --------------  ----------
-    DIRECTORY                  5               5               0               0
-    TABLE                      1               0               0               1
-
-In this output, you can see that the schema PARKINGFINE has no issues with tables as it only contains a simple table with 9 million rows in it. We will use this schema to demonstrate the MV2ADB script.
-
-GATHERING REQUIRED DETAILS
-The configuration file for MV2ADB needs a series of parameters for export, upload of the dumpfile and import of the dumpfile. A full file with hints can be found in the /opt/mv2adb/conf directory. For this lab we will use only the parameters needed for a simple migration.
- CREATE A NEW FILE FOR THE CONFIGURATION
-Please use your tool of choice (vi, desktop Text Editor etc) to create a new file. 
-[oracle@ws ~]$ sudo vi /opt/mv2adb/conf/ATP.mv2adb.conf
-or
-[oracle@ws ~]$ sudo gedit /opt/mv2adb/conf/ATP.mv2adb.conf
-Cut-and-paste the below parameters in this new document so that we can start entering the required data. At this moment, only copy-and-paste the below, we will make changes to the values in the following sections.
-````
-# DB Parameters
-DB_CONSTRIG=//localhost:1521/DB112
-SYSTEM_DB_PASSWORD=53152A9726C00647158CD4B1E103F1F2
-SCHEMAS=PARKINGFINE
-DUMPFILES=/tmp/DB112-<INITIALS>.dmp
-OHOME=/u01/app/oracle/product/11.2.0/dbhome_112
-ICHOME=/opt/instantclient/18.3
-
-# Expdp/Impdp Parameters 
-ENC_PASSWORD=53152A9726C00647158CD4B1E103F1F2
-ENC_TYPE=AES256
-
-# Object Store Properties 
-BMC_HOST=
-BMC_TENNANT=oraclepartnersas
-BMC_BUCKET=
-BMC_ID=
-BMC_PASSWORD=
-
-# ADB Parameters 
-ADB_NAME=
-ADB_PASSWORD=
-CFILE=
-````
-
-
-
-
-START THE MIGRATION USING THE MV2ADB SCRIPT
-Now we can start the actual migration by starting the MV2ADB tool using the proper options.
- START THE MV2ADB SCRIPT USING THE CONFIGURATIONFILE YOU JUST CREATED
-[oracle@ws ~]$ sudo /opt/mv2adb/mv2adb auto -conf /opt/mv2adb/conf/ATP.mv2adb.conf
+Execute the following command as root user and check the output:
 
 ````
-INFO: 2019-03-27 14:08:27: Please check the logfile '/opt/mv2adb/out/log/mv2adb_12753.log' for more details
+# <copy>/opt/mv2adb/mv2adb advisor -conf /opt/mv2adb/conf/ATP.mv2adb.conf</copy>
+````
 
+Output similar as below should be displayed:
+
+````
+INFO: 2020-03-20 16:25:28: Please check the logfile '/opt/mv2adb/out/log/mv2adb_18978.log' for more details
 
 --------------------------------------------------------
 mv2adb - Move data to Oracle Autonomous Database
+Version: 2.0.1-80
+Copyright (c) 1982-2019 Oracle and/or its affiliates.
+--------------------------------------------------------
 Author: Ruggero Citton <ruggero.citton@oracle.com>
 RAC Pack, Cloud Innovation and Solution Engineering Team
-Copyright (c) 1982-2019 Oracle and/or its affiliates.
-Version: 2.0.1-29
 --------------------------------------------------------
 
-INFO: 2019-03-27 14:08:27: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.conf'
-INFO: 2019-03-27 14:08:28: Checking schemas on source DB
-...
-INFO: 2019-03-27 14:08:54: ...loading '/tmp/DB112-RP_01.dmp' into bucket 'UPGRADEBUCKET-RP'
-SUCCESS: 2019-03-27 14:09:27: ...file '/tmp/DB112-RP_01.dmp' uploaded on 'UPGRADEBUCKET-RP' successfully
-SUCCESS: 2019-03-27 14:09:27: Upload of '1' dumps over Oracle Object Store complete successfully
+INFO: 2020-03-20 16:25:28: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.conf'
+INFO: 2020-03-20 16:25:28: Due to ADB_TARGET skipping online Cloud Service Type check
+INFO: 2020-03-20 16:25:28: Using Oracle Home '/u01/app/oracle/product/11.2.0/dbhome_112'
+INFO: 2020-03-20 16:25:28: Target Cloud Service Type is 'ATP'
+INFO: 2020-03-20 16:25:29: Getting advisor report for '//localhost:1521/DB112'
+INFO: 2020-03-20 16:25:29: ...step1 - installing advisor package on '//localhost:1521/DB112'
+INFO: 2020-03-20 16:25:30: ...step2 - getting advisor report
+INFO: 2020-03-20 16:25:30: ...getting advisor report for schema 'PARKINGFINE', it may get some time...
 
-INFO: 2019-03-27 14:09:27: Performing impdp into ADB...
-INFO: 2019-03-27 14:09:27: Step1 - ...drop Object Store Credential
-INFO: 2019-03-27 14:09:29: Step2 - ...creating Object Store Credential
-INFO: 2019-03-27 14:09:36: Step3 - ...executing import datapump to ADB
-INFO: 2019-03-27 14:12:42: Moving impdp log 'mv2adb_impdp_20190327-140936.log' to Object Store
-SUCCESS: 2019-03-27 14:12:43: Impdp to ADB 'ATPINIT' executed successfully
+ ==========================================================================================                                                             
+ == ATP SCHEMA MIGRATION REPORT FOR PARKINGFINE                                                                                                          
+ ==========================================================================================                                                              
+                                                                                                                                                         
+ ADB Advisor Version   : 19.3.0.0.1                                                                                                                      
+ Instance Name         : DB112                                                                                                                           
+ Database Name         : DB112                                                                                                                           
+ Host Name             : rp-upgradev10-01                                                                                                                
+ Database Version      : 11.2.0.4.0                                                                                                                      
+ Schemas Analyzed      : PARKINGFINE                                                                                                                     
+ Analyzing for         : Autonomous Transaction Processing (Serverless)                                                                                  
+ Report Start date/time: 20-MAR-2020 16:25                                                                                                               
+                                                                                                                                                         
+ ------------------------------------------------------------------------------------------                                                              
+ -- SECTION 1: SUMMARY                                                                                                                                   
+ ------------------------------------------------------------------------------------------                                                              
+                                                                                                                                                         
+                                            Objects         Objects         Total                                                                        
+                            Object          Will Not        Will Migrate    Objects                                                                      
+ Object Type                Count           Migrate         With Changes    Will Migrate                                                                 
+ -------------------------  --------------  --------------  --------------  --------------                                                               
+ TABLE                      1               0               0               1                                                                            
+ User Objects in SYS        0               0               0               0                                                                            
+ User Objects in SYSTEM     0               0               0               0                                                                            
+                                                                                                                                                         
+ ------------------------------------------------------------------------------------------                                                              
+ -- SECTION 2: FOLLOWING OBJECTS WILL NOT MIGRATE                                                                                                        
+ ------------------------------------------------------------------------------------------                                                                                                                                                                                                                      
+                                                                                                                                                         
+ ------------------------------------------------------------------------------------------                                                              
+ -- SECTION 3: FOLLOWING OBJECTS WILL MIGRATE WITH CHANGES                                                                                               
+ ------------------------------------------------------------------------------------------                                                              
+                                                                                                                                                         
+ ------------------------------------------------------------------------------------------                                                              
+ -- SECTION 4: MIGRATION ADDITIONAL INFO                                                                                                                 
+ ------------------------------------------------------------------------------------------                                                              
+                                                                                                                                                         
+ 1) User defined tablespaces are not allowed in ATP-S and ADW-S (Serverless) (Count=1):                                                                  
+ --------------------------------------------------------------------------------------                                                                  
+ Note: Creation of tablespaces is disallowed in ATP and ADW (Serverless). The tablespace clause gets ignored                                             
+ and all objects get created in 'DATA' tablespace. The following is the list of schemas and the tablespaces                                              
+ currently in use.                                                                                                                                       
+                                                                                                                                                         
+ PARKINGFINE          USERS                                                                                                                              
+                                                                                                                                                         
+ 2) Schema Owner's user attributes will be modified in ADB (Count=1):                                                                                    
+ --------------------------------------------------------------------                                                                                    
+ Note: The following schema owner's DEFAULT TABLESPACE and/or DEFAULT PROFILE will be modified in ADB.                                                   
+                                                                                                                                                         
+ DEFAULT TABLESPACE for PARKINGFINE will be modified from 'USERS' to 'DATA'                                                                              
+                                                                                                                                                         
+ 3) User Profiles will not migrate to ADB (Count=1):                                                                                                     
+ ---------------------------------------------------                                                                                                     
+ Note: In ADB all users will be assigned the 'DEFAULT' Profile. Plus, you are not allowed to create additional                                           
+ PROFILEs. The following user defined PROFILEs will not migrate:                                                                                         
+                                                                                                                                                         
+ MONITORING_PROFILE                                                                                                                                      
+                                                                                                                                                         
+ 4) Database Options currently in use but will not be available in the ADB (Count=1):                                                                    
+ ------------------------------------------------------------------------------------                                                                    
+ Note: The following Database Options are detected as being used. ADB does not have these Options installed.                                             
+ Please verify if the application/schema to be migrated depends on these options.                                                                        
+                                                                                                                                                         
+ Tuning Pack                                                                                                                                             
+                                                                                                                                                         
+ 5) Database Parameters are detected as modified in the current database but can't be modified in the ADB (Count=1):                                     
+ -------------------------------------------------------------------------------------------------------------------                                     
+ Note: The following init parameters are modified in your database that you would not be able to modify                                                  
+ in ADB. Please refer to the Oracle Autonomous Database documentation on the parameters that you are                                                     
+ allowed to modify.                                                                                                                                      
+                                                                                                                                                         
+ local_listener                                                                                                                                          
+                                                                                                                                                         
+                                                                                                                                                         
+ ------------------------------------------------------------------------------------------                                                              
+ -- END OF REPORT                                                                                                                                        
+ ------------------------------------------------------------------------------------------                                                              
+ Report End Datetime   : 20-MAR-2020 16:25                                                                                                               
+ Report Runtime        : +000000000 00:00:03.771542000                                                                                                   
+ ------------------------------------------------------------------------------------------                                                              
 ````
-After about 10 minutes, all the steps should have been executed successfully. If you encounter any error, please check the logfile that was displayed immediately after you started the script. This will contain all of the individual steps, commands used and the output of those commands.
-LOGIN AND CHECK THE MIGRATED DATABASE
-USE SQL*DEVELOPER TO CHECK IF THE PARKINGFINE USER HAS BEEN MIGRATED TO ATP
-On your Desktop, you can see SQL*Developer. Start this application.
- 
- CREATE A NEW CONNECTION TO ATP BY CLICKING ON THE GREEN + SIGN IN THE CONNECTIONS PANE
-Connection Name	:	Choose your own name
-Username	:	admin
-Password	:	OraclePTS#2019 (or any other password you have used)
-Connection Type	:	Cloud Wallet
-Configuration File	:	<select the wallet you downloaded in /home/oracle/Downloads>
-Service	:	<find YourService_tp>
- 
- ENTER THE REQUIRED DETAILS AND PRESS CONNECT
+
+In this output, you can see that the schema PARKINGFINE has no issues with tables as it only contains a simple table with 9 million rows in it. We will use this schema to demonstrate the MV2ADB script.
+
+## Execute the MV2ADB script ##
+
+Now we can start the actual migration by starting the MV2ADB tool using the proper options. Execute the following command as root user:
+
+````
+$ <copy>/opt/mv2adb/mv2adb auto -conf /opt/mv2adb/conf/ATP.mv2adb.conf</copy>
+````
+
+
+````
+INFO: 2020-03-20 16:34:40: Please check the logfile '/opt/mv2adb/out/log/mv2adb_30698.log' for more details
+
+--------------------------------------------------------
+mv2adb - Move data to Oracle Autonomous Database
+Version: 2.0.1-80
+Copyright (c) 1982-2019 Oracle and/or its affiliates.
+--------------------------------------------------------
+Author: Ruggero Citton <ruggero.citton@oracle.com>
+RAC Pack, Cloud Innovation and Solution Engineering Team
+--------------------------------------------------------
+
+INFO: 2020-03-20 16:34:40: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.conf'
+INFO: 2020-03-20 16:34:44: Checking schemas on source DB
+INFO: 2020-03-20 16:34:44: Performing schema expdp for 'PARKINGFINE' from source DB...
+INFO: 2020-03-20 16:34:44: Step 1 - ...getting ADB parallelism
+INFO: 2020-03-20 16:34:45: Step 2 - ...getting source DB version
+INFO: 2020-03-20 16:34:45: Step 3 - ...creating expdp directory 'MV2ADB_EXPDP_DIR' for path '/tmp'
+INFO: 2020-03-20 16:34:45: Step 4 - ...getting latest SCN
+INFO: 2020-03-20 16:34:46: Step 5 - ...checking Cloud Service Type
+INFO: 2020-03-20 16:34:47: Step 6 - ...executing export datapump
+SUCCESS: 2020-03-20 16:35:31: Expdp executed successfully
+
+INFO: 2020-03-20 16:35:31: Performing '6' dump upload to Oracle Object Store...
+INFO: 2020-03-20 16:35:31: ...loading '/tmp/DB112-ATP_01.dmp' into bucket 'MyBucket'
+SUCCESS: 2020-03-20 16:35:31: ...file '/tmp/DB112-ATP_01.dmp' uploaded on 'MyBucket' successfully
+INFO: 2020-03-20 16:35:31: ...loading '/tmp/DB112-ATP_02.dmp' into bucket 'MyBucket'
+SUCCESS: 2020-03-20 16:35:39: ...file '/tmp/DB112-ATP_02.dmp' uploaded on 'MyBucket' successfully
+INFO: 2020-03-20 16:35:39: ...loading '/tmp/DB112-ATP_03.dmp' into bucket 'MyBucket'
+SUCCESS: 2020-03-20 16:35:45: ...file '/tmp/DB112-ATP_03.dmp' uploaded on 'MyBucket' successfully
+INFO: 2020-03-20 16:35:45: ...loading '/tmp/DB112-ATP_04.dmp' into bucket 'MyBucket'
+SUCCESS: 2020-03-20 16:35:53: ...file '/tmp/DB112-ATP_04.dmp' uploaded on 'MyBucket' successfully
+INFO: 2020-03-20 16:35:53: ...loading '/tmp/DB112-ATP_05.dmp' into bucket 'MyBucket'
+SUCCESS: 2020-03-20 16:36:00: ...file '/tmp/DB112-ATP_05.dmp' uploaded on 'MyBucket' successfully
+INFO: 2020-03-20 16:36:00: ...loading '/tmp/DB112-ATP_06.dmp' into bucket 'MyBucket'
+SUCCESS: 2020-03-20 16:36:07: ...file '/tmp/DB112-ATP_06.dmp' uploaded on 'MyBucket' successfully
+SUCCESS: 2020-03-20 16:36:07: Upload of '6' dumps over Oracle Object Store complete successfully
+
+INFO: 2020-03-20 16:36:07: Performing impdp into ADB...
+INFO: 2020-03-20 16:36:07: Step 1 - ...drop Object Store Credential
+INFO: 2020-03-20 16:36:10: Step 2 - ...creating Object Store Credential
+INFO: 2020-03-20 16:36:11: Step 3 - ...executing import datapump to ADB
+INFO: 2020-03-20 16:42:48: Moving impdp log 'mv2adb_impdp_20200320-163611.log' to Object Store
+SUCCESS: 2020-03-20 16:42:49: Import data completed without errors.
+````
+
+After about 10 minutes, all the steps should have been executed successfully. 
+
+If you want to see which issues end/or errors were found during the import, check the logfile as specified in the logging. If you encounter any error during the running of the script, please check the logfile in the directory that was displayed immediately after you started the script. 
+
+#### Login and check the migrated database ####
+
+In the workshop image, on your Desktop, you can see SQL*Developer. 
+
+- Start this application.
+- Create a new connection by clicking on the green (+) plug sign
+	- This is in the left top, the Connections pane
+
+Enter the following details:
+
+- **Connection Name**
+	- Choose your own name
+- **Username**
+	- admin
+- **Password**
+	- OraclePTS#2019 (or any other password you have used)
+- **Connection Type**
+	- Cloud Wallet
+- **Configuration File**
+	- Select the wallet you downloaded in /home/oracle/Downloads
+- **Service**
+	- Select your service with the `_tp` extension
+	- Make sure you select a service that belongs to your ATP instance
+
 After connecting, a new SQL Window will be displayed. Here you can execute queries on the ATP environment.
- 
- ENTER THE QUERY AND PRESS THE GREEN ARROW TO EXECUTE IT
-In the Query Result window, the result of the query will be displayed:
- 
+
+````
+<copy>select count(*) from parkingfine.parking_violations</copy>
+````
+
+After clicking on the green arrow in the SQL Window, the query will be executed. The result of the query should be similar to this:
+
+````
+COUNT(*)
+--------
+ 9060183
+````
+
+It seems the migration of our table with over 9 million rows was successful.
+
+** `End of Lab` **
