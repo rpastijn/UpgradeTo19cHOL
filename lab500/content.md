@@ -58,11 +58,11 @@ Output similar to the following should be visible:
     -rwxr-xr-x 1 oracle oinstall 57556 Jun 28 2018 genezi
     ...
 
-### Create a new Autonomous Database as target ###
+## Create a new Autonomous Database ##
 
 Since we are migrating to Oracle Autonomous Database, we will need to create a new ATP database before we can continue. 
 
-#### Login to Oracle Cloud Infrastructure ####
+### Login to Oracle Cloud Infrastructure ###
 
 In your Workshop hand-out you will see an Oracle Cloud Infrastructure URL like `https://console.<region>.oraclecloud.com`. Locate this URL and enter it into the browser inside the supplied image. In the same section on the handout, you will see the Cloud Tenancy, the username and the password.
 
@@ -79,7 +79,7 @@ When logged in, execute the following steps
 
 In this menu, you can see the databases currently running and you can create new databases. 
 
-#### Select correct region and compartment ####
+### Select correct region and compartment ###
 
 Since Oracle has several regions in the world to host the databases and your administrator might have restricted the locations where you can create those databases, make sure you have selected the correct values for the following items:
 
@@ -92,7 +92,7 @@ Since Oracle has several regions in the world to host the databases and your adm
 	- Correct compartment can be found on your hand-out
 	- Compartment name in PTS workshops has the format `ADB-COMPARTMENT-<city>-<date>`
  
-#### Create a new Autonomous Transaction Processing database ####
+### Create a new Autonomous Transaction Processing database ###
 
 By clicking on the blue 'Create Autonomous Database' button, the wizard will display that helps you with the creation. Enter the following values for your new database:
 
@@ -110,13 +110,13 @@ After this, click on the **'Create Autonomous Database'** button to start the pr
 
 You may continue with the Lab guide while the database is being created.
 
-### Create an Object Store Bucket ###
+## Create an Object Store Bucket ##
 
 The MV2ADB tool needs to upload one or several Datapump dump files to the Oracle Cloud Environment before the import process can start. It requires Cloud Object storage to do this.
 
 The MV2ADB tool can create the required Object Store Bucket as part of the execution of the script but this requires the install and setup of the OCI Command Line Interface. To bypass the extra install requirement, we will pre-create the bucket ourselves in the OCI Console.
 
-#### Navigate to the Object Storage menu in the OCI Console ####
+### Navigate to the Object Storage menu in the OCI Console ###
 
 
 
