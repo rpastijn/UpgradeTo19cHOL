@@ -13,14 +13,10 @@ The script that allows you easy migration to ADB can be downloaded from MyOracle
 The MV2ADB tool is an .rpm package and needs to be installed as the root user.
 
 ````
-[oracle@ws ~]$ <copy>sudo yum -y localinstall /source/mv2adb*.rpmimport oml</copy>
+[oracle@ws ~]$ <copy>sudo yum -y localinstall /source/mv2adb*.rpm</copy>
 ````
+You should see a similar output:
 
-The script that allows you easy migration to ADB can be downloaded from MyOracle Support through note **2463574.1**. In the Workshop environment we have already downloaded the tool for you in the `/source` directory.
-
-> INSTALL THE MV2ADB TOOL AS ROOT USER
-
-    [oracle@ws ~]$ sudo yum -y localinstall /source/mv2adb*.rpm
     Loaded plugins: langpacks, ulninfo
     Examining /source/mv2adb-2.0.1-40.noarch.rpm: mv2adb-2.0.1-40.noarch
     Marking /source/mv2adb-2.0.1-40.noarch.rpm to be installed
@@ -39,48 +35,91 @@ The script that allows you easy migration to ADB can be downloaded from MyOracle
 
     Complete!
 
-Please note that the install script shows the location where the tool has been installed. In this case `/opt/mv2adb`. We need this later in the Lab.
+Please note that the install script shows the location where the tool has been installed. In this case **`/opt/mv2adb`**. We need this later in the Lab.
 
-> CHECK ALREADY INSTALLED ORACLE INSTANT CLIENT
+### Check already installed Oracle Instant Client ###
 
 We have already downloaded and unzipped the required files for the Oracle Instant Client. In the directory `/opt/instantclient` we have unzipped the base Instant Client, the SQL*Plus zip file and the Tools zip file. All have been downloaded from OTN.
 
-Make sure the directory 19.6 exists and that the directory has contents
+Make sure the directory 19.6 exists and that the directory has contents by executing the following command:
+
+````
+$ <copy>ls -l /opt/instantclient/19.6/</copy>
+````
+
+Output similar to the following should be visible:
 
     [oracle@upgradews-4 ~]$ ls -l /opt/instantclient/18.3/
     total 235040
     -rwxr-xr-x 1 oracle oinstall 40617 Jun 28 2018 adrci
     -rw-r--r-- 1 oracle oinstall 1317 Jun 28 2018 BASIC_README
--rwxr-xr-x 1 oracle oinstall 1066102 Jun 28 2018 exp
--rwxr-xr-x 1 oracle oinstall 228672 Jun 28 2018 expdp
--rwxr-xr-x 1 oracle oinstall 57556 Jun 28 2018 genezi
-...
-CREATING A NEW AUTONOMOUS ATP ENVIRONMENT
-In your Workshop hand-out you will see an Oracle Cloud Infrastructure URL like
-https://console.<region>.oraclecloud.com
- NAVIGATE TO THE ORACLE CLOUD INFRASTRUCTURE CONSOLE AND LOGIN USING THE PROVIDED CREDENTIALS
- 
+    -rwxr-xr-x 1 oracle oinstall 1066102 Jun 28 2018 exp
+    -rwxr-xr-x 1 oracle oinstall 228672 Jun 28 2018 expdp
+    -rwxr-xr-x 1 oracle oinstall 57556 Jun 28 2018 genezi
+    ...
 
- AFTER LOGIN, NAVIGATE TO THE AUTONOMOUS DATABASE SECTION
+### Create a new Autonomous Database as target ###
+
+Since we are migrating to Oracle Autonomous Database, we will need to create a new ATP database before we can continue. 
+
+#### Login to Oracle Cloud Infrastructure ####
+
+In your Workshop hand-out you will see an Oracle Cloud Infrastructure URL like `https://console.<region>.oraclecloud.com`. Locate this URL and enter it into the browser inside the supplied image. In the same section on the handout, you will see the Cloud Tenancy, the username and the password.
+
+Execute the following steps:
+
+- Navigate to the Oracle Cloud Infrastructure Console
+	- Enter the Tenancy name and submit
+	- Enter the username and password supplied and press submit
+
+When logged in, execute the following steps
+
+- Use the left side menu (stacked menu or hamburger menu)
+- Navigate to the Autonomous Transaction Processing menu
+
+In this menu, you can see the databases currently running and you can create new databases. 
+
+#### Select correct region and compartment ####
+
+Since Oracle has several regions in the world to host the databases and your administrator might have restricted the locations where you can create those databases, make sure you have selected the correct values for the following items:
+
+- Datacenter Region
+	- Like US West (Phoenix) or Germany Central (Frankfurt)
+	- Correct region can be found on your hand-out
+- Compartment
+	- By default the (root) compartment is selected
+	- Select the Compartment you have access to
+	- Correct compartment can be found on your hand-out
+	- Compartment name in PTS workshops has the format `ADB-COMPARTMENT-<city>-<date>`
  
- MAKE SURE YOU HAVE SELECTED THE CORRECT COMPARTMENT
-In the Lab handout you will see the compartment that you have access to. Please select this compartment using the dropdown box on the left side of the screen (ADB-COMPARTMENT-<city>-<date>)
- 
- CREATE A NEW AUTONOMOUS DATABASE USING THE BLUE BUTTON
-Workload Type	:	Autonomous Transaction Processing
-Compartment	:	<keep value>
-Display Name	:	ATP-<your-name>
-Database Name	:	ATP<your-initials>
-CPU Core Count	:	1
-Storage (TB)	:	1
-Autoscaling	: 	unchecked
-Password	:	OraclePTS#2019
-License Type	:	My Organization Already owns Oracle Database (etc..)
- ENTER REQUIRED DETAILS AND CREATE THE AUTONOMOUS DATABASE
-This process should not take more than a few minutes to complete. 
+#### Create a new Autonomous Transaction Processing database ####
+
+By clicking on the blue 'Create Autonomous Database' button, the wizard will display that helps you with the creation. Enter the following values for your new database:
+
+    Workload Type : Autonomous Transaction Processing
+    Compartment	  : <keep value>
+    Display Name  : ATP-<your-name>
+    Database Name : ATP<your-initials>
+    CPU Core Count: 1
+    Storage (TB)  : 1
+    Autoscaling   : unchecked
+    Password      : OraclePTS#2019
+    License Type  : BYOL or 'My Organization Already owns Oracle Database (etc..)'
+
+After this, click on the **'Create Autonomous Database'** button to start the process. This process should not take more than a few minutes to complete. 
+
 You may continue with the Lab guide while the database is being created.
-CREATE AN OBJECT STORE BUCKET
-As we need to upload the export to the OCI environment, we need to create a location to do this. The MV2ADB script could create a new location but this would require the setup of the OCI Commandline tools. Since this Lab is using a more generic approach, we need to pre-create the directory (called Bucket).
+
+### Create an Object Store Bucket ###
+
+The MV2ADB tool needs to upload one or several Datapump dump files to the Oracle Cloud Environment before the import process can start. It requires Cloud Object storage to do this.
+
+The MV2ADB tool can create the required Object Store Bucket as part of the execution of the script but this requires the install and setup of the OCI Command Line Interface. To bypass the extra install requirement, we will pre-create the bucket ourselves in the OCI Console.
+
+#### Navigate to the Object Storage menu in the OCI Console ####
+
+
+
  NAVIGATE TO OBJECT STORAGE IN THE OCI CONSOLE
  
  CREATE A NEW BUCKET WITH A UNIQUE NAME
@@ -129,18 +168,19 @@ A second issue are 7 tables that apparently need changes before they can be impo
  EXECUTE THE ADB SCHEMA ADVISOR FOR SCHEMA PARKINGFINE
  SQL> exec adb_advisor.report('PARKINGFINE','ATP')
 
-======================================================================================
-== ATP SCHEMA MIGRATION REPORT FOR PARKINGFINE
-======================================================================================
---------------------------------------------------------------------------------------
--- ATP MIGRATION SUMMARY
---------------------------------------------------------------------------------------
-                                                           Objects         Total
-                           Object          Objects         Migrated        Objects
-Object Type                Count           Not Migrated    With Changes    Migrated
--------------------------  --------------  --------------  --------------  ----------
-DIRECTORY                  5               5               0               0
-TABLE                      1               0               0               1
+    ======================================================================================
+    == ATP SCHEMA MIGRATION REPORT FOR PARKINGFINE
+    ========================================================================    ==============
+    --------------------------------------------------------------------------------------
+    -- ATP MIGRATION SUMMARY
+    --------------------------------------------------------------------------------------
+                                                               Objects             Total
+                               Object          Objects         Migrated        Objects
+    Object Type                Count           Not Migrated    With Changes    Migrated
+    -------------------------  --------------  --------------  --------------  ----------
+    DIRECTORY                  5               5               0               0
+    TABLE                      1               0               0               1
+
 In this output, you can see that the schema PARKINGFINE has no issues with tables as it only contains a simple table with 9 million rows in it. We will use this schema to demonstrate the MV2ADB script.
 
 GATHERING REQUIRED DETAILS
@@ -292,6 +332,8 @@ START THE MIGRATION USING THE MV2ADB SCRIPT
 Now we can start the actual migration by starting the MV2ADB tool using the proper options.
  START THE MV2ADB SCRIPT USING THE CONFIGURATIONFILE YOU JUST CREATED
 [oracle@ws ~]$ sudo /opt/mv2adb/mv2adb auto -conf /opt/mv2adb/conf/ATP.mv2adb.conf
+
+````
 INFO: 2019-03-27 14:08:27: Please check the logfile '/opt/mv2adb/out/log/mv2adb_12753.log' for more details
 
 
@@ -316,9 +358,10 @@ INFO: 2019-03-27 14:09:29: Step2 - ...creating Object Store Credential
 INFO: 2019-03-27 14:09:36: Step3 - ...executing import datapump to ADB
 INFO: 2019-03-27 14:12:42: Moving impdp log 'mv2adb_impdp_20190327-140936.log' to Object Store
 SUCCESS: 2019-03-27 14:12:43: Impdp to ADB 'ATPINIT' executed successfully
+````
 After about 10 minutes, all the steps should have been executed successfully. If you encounter any error, please check the logfile that was displayed immediately after you started the script. This will contain all of the individual steps, commands used and the output of those commands.
 LOGIN AND CHECK THE MIGRATED DATABASE
---> USE SQL*DEVELOPER TO CHECK IF THE PARKINGFINE USER HAS BEEN MIGRATED TO ATP
+USE SQL*DEVELOPER TO CHECK IF THE PARKINGFINE USER HAS BEEN MIGRATED TO ATP
 On your Desktop, you can see SQL*Developer. Start this application.
  
  CREATE A NEW CONNECTION TO ATP BY CLICKING ON THE GREEN + SIGN IN THE CONNECTIONS PANE
