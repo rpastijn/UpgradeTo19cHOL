@@ -161,7 +161,9 @@ SQL> <copy>show pdbs</copy>
          4 DB121C02                       READ WRITE NO
 ````
 
-## Create the Auto Upgrade Config file ##
+## Prepare and run the Autoupgrade tool ##
+
+### Create the Auto Upgrade Config file ###
  
 The Auto Upgrade tool is part of the 19c Oracle Home distribution. Previous versions (<= 18.4) will need a separate download and setup from MyOracle Support under note 2485457.1. In this example we will only put one database into the configuration file but you can add as many databases as needed.
 
@@ -197,7 +199,7 @@ upg1.timezone_upg=yes</copy>
 
 Save the file and close the editor.
 
-## Launch the Auto Upgrade tool pre-check phase ##
+### Launch the Auto Upgrade tool pre-check phase ###
 
 We can now launch the Auto upgrade tool. First make sure you have the 19c environment variables setup:
 
