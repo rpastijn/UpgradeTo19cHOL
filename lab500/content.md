@@ -214,30 +214,36 @@ Cut-and-paste the following default setup file in the new config file:
 ````
 <copy>
 # DB Parameters
-DB_CONSTRIG=//localhost:1521/DB112
+DB_CONSTRING=//localhost:1521/DB112
 SYSTEM_DB_PASSWORD=53152A9726C00647158CD4B1E103F1F2
 SCHEMAS=PARKINGFINE
-DUMPFILES=/tmp/DB112-ATP.dmp
+DUMP_PATH=/tmp
+DUMP_NAME=DB112-ATP.dmp
 OHOME=/u01/app/oracle/product/11.2.0/dbhome_112
 ICHOME=/opt/instantclient/19.6
 
-# Expdp/Impdp Parameters
-ENC_PASSWORD=53152A9726C00647158CD4B1E103F1F2
-ENC_TYPE=AES256
-
 # Object Store Properties
-BMC_HOST=
-BMC_TENNANT=
-BMC_BUCKET=
-BMC_ID=
-BMC_PASSWORD=
+OCI_HOST=https://swiftobjectstorage.<region>.oraclecloud.com
+OCI_NAMESPACE=oraclepartnersas
+OCI_BUCKET=
+OCI_ID=
+OCI_PASSWORD=
 
 # ADB Parameters
 ADB_NAME=
 ADB_PASSWORD=
-CFILE=
+ADB_CFILE=
+ADB_TARGET=ATP
 </copy>
 ````
+<!-- ADB_TARGET=ATP is needed because of issue with 11g database/sqlplus. Has been logged as a bug -->
+
+<!-- Removed because of issues with 11g and encryption
+# Expdp/Impdp Parameters
+ENC_PASSWORD=53152A9726C00647158CD4B1E103F1F2
+ENC_TYPE=AES256
+-->
+
 
 In the next sections we will locate the required parameters and put them in this config file. Please keep this config file open but save it on a regular basis so that no information is lost if something goes wrong. If you need to access the Operating System, please open a second terminal window.
 
@@ -247,22 +253,43 @@ The initial section is regarding the source database. Since this is a Lab enviro
 
 Here is some information where you can find the details:
 
-- **DB_CONSTRIG**
+- **DB_CONSTRING**
 	- Connecting string from the local system (where mv2adb is running) to the database instance that needs to be migrated
 - **SYSTEM_DB_PASSWORD**
 	- Password for SYSTEM user for this source database
 - **SCHEMAS**
 	- Schema's to be exported
 	- Only transport the schema's that you need, do not include any default schema's like HR, OE, SYSTEM, SYS etc as they already exist in ADB and might result in errors (or get ignored)
-- **DUMPFILES**
-	- File system location of dumpfiles. 
-	- If you want parallelism during export and import, specify as many files as you want the parallelism to be.
+- ** DUMP_PATH**
+	- Directory on the local filesystem where the .dmp files can be storage before getting uploaded to the Object Storage.
+	- Outside of this image, please make sure there is enough free space available for the export.
+- **DUMP_NAME**
+	- Name of the dumpfiles
+	- In case of parallelism, the script will automatically append numbers to the file.
 	- Make sure the files are unique in the source but also in the destination (ATP) environment.
+	- During the execution of the script, existing files on the Object storage will be overwritten without warning.
 - **OHOME**
 	- The source database Oracle Home
 - **IHOME**
 	- The installed Oracle Instant Client home (basic, SQL*Plus and Tools unzipped)
 
+All of the values have been entered already. In case you want to specify your own password, you need will need to encrypt this password using the MV2ADB tooling. For this, the command `encpwd` has been created.
+
+Example: If your password is 'Welcome_123', you would need to execute the following command:
+
+````
+# <copy>/opt/mv2adb/mv2adb encpass</copy>
+````
+
+After this, you enter the password your want to encrypt (twice) and the encrypted value will be displayed:
+
+    Please enter the password :
+    Please re-enter the password :
+    53152A9726C00647158CD4B1E103F1F2
+
+This value has already been entered in the config file as password entry for the database. For this Hands On Lab, please do not change it (unless you change the password on the 11g Source database as well).
+
+<!-- Removed of issue with encryption and 11g clients
 ### Gathering Expdb/Impdb parameters ###
 
 The MV2ADB tool only allows you to transport encrypted dumpfiles to the OCI Cloud to make sure your data cannot be compromised when exporting and uploading your data. In this section of the config file, you need to specify the password and the encryption type. We have already entered a password and encryption type for you.
@@ -275,20 +302,7 @@ The MV2ADB tool only allows you to transport encrypted dumpfiles to the OCI Clou
 	- Type of encryption of your data. 
 	- The higher the number, the more encryption but also slower export/import. 
 	- Options are  **AES128**, **AES192** and **AES256**
-
-In case you want to specify your own password, you need will need to encrypt this password using the MV2ADB tooling. For this, the command `encpwd` has been created.
-
-Example: If your encryption password is 'Welcome_123', you would need to execute the following command:
-
-````
-# <copy>/opt/mv2adb/mv2adb encpass</copy>
-````
-
-After this, you enter the password your want to encrypt (twice) and the encrypted value will be displayed:
-
-    Please enter the password :
-    Please re-enter the password :
-    53152A9726C00647158CD4B1E103F1F2
+-->
 
 ### Gathering Object Store properties ###
 
@@ -296,20 +310,20 @@ The MV2ADB script can currently only work with .dmp dumpfiles using the Swift co
 
 If the OCI Command Line Interface (OCI CLI) is installed on the MV2ADB server, you do not need to enter the Swift compatible details. See the example config in the documentation for more information.
 
-- **BMC_HOST**
+- **OCI_HOST**
 	- This is the Swift object storage URL for your environment. 
 	- It usually has the form of `https://swiftobjectstorage.<region>.oraclecloud.com` 
 	- Region is **`us-phoenix-1`**, **`eu-frankfurt-1`** or similar. Please check your hand-out for details
-- **BMC_TENNANT**
-	- Name of your Tenancy. 
+- **OCI_NAMESPACE**
+	- Namespace of your Tenancy, this is usually the lowercase version of your Tenancy 
 	- Be aware, for SWIFT we only use lower case naming
-- **BMC_BUCKET**
+- **OCI_BUCKET**
 	- The name of an object storage bucket that will be used for this migration. 
 	- In the previous section you pre-created a bucket with a unique name.
-- **BMC_ID**
+- **OCI_ID**
 	- Your username in OCI
 	- Example: ADB-<city>-<date>
-- **BMC_PASSWORD**
+- **OCI_PASSWORD**
 	- This is NOT the console password for your user !
 	- The Swift interface needs a so-called Authentication Token
 	- This Auth Token is user specific and would normally be generated by you
@@ -346,11 +360,11 @@ Now that we have the last value we need for the Object Store settings, please en
 
 ````
 # Object Store Properties 
-BMC_HOST=https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com
-BMC_TENNANT=oraclepartnersas
-BMC_BUCKET=ATP-MyInitials
-BMC_ID=ADB-<city>-<date>
-BMC_PASSWORD= 765B5FDA9F3F6110E7AB9E7D....12B3E38DA130FBCC2E3C0535DA923DF46CDF
+OCI_HOST=https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com
+OCI_NAMESPACE=oraclepartnersas
+OCI_BUCKET=ATP-MyInitials
+OCI_ID=ADB-<city>-<date>
+OCI_PASSWORD= 765B5FDA9F3F6110E7AB9E7D....12B3E38DA130FBCC2E3C0535DA923DF46CDF
 ````
 
 ### Gathering the ADB Parameters ###
@@ -363,8 +377,11 @@ During the gathering of the other parameters, your ADB environment should have b
 - **ADB_PASSWORD**
 	- Database ADMIN password
 	- Encrypted using the mv2adb tool
-- **CFILE**
+- **ADB_CFILE**
 	- Zipfile containing database credentials
+- **ADB_TARGET**
+	- Target type of your Autonomous database.
+	- Values can be ATP or ADB
 	 
 **First parameter** requires the name of your created ADB environment. 
 - Navigate to the ADB Console and find the name of your database. 
@@ -389,6 +406,8 @@ During the gathering of the other parameters, your ADB environment should have b
 	- Your zipfile will be downloaded to the default location `/home/oracle/Downloads`. 
 - Please note the exact name and location of the wallet.zip and enter this in your parameters.
 
+**Fourth parameter** should be ATP for Autonomous Transaction Processing. If you, by accident, created an Autonomous Data Warehouse environment, change the parameter accordingly.
+
 Example values for the ADB Parameters section:
 
 **Please do not copy these values, use your own values to complete YOUR file**
@@ -397,7 +416,8 @@ Example values for the ADB Parameters section:
 # ADB Parameters 
 ADB_NAME=ATPINIT
 ADB_PASSWORD= DE3D105A8E6F6A4D5E8XXXSW6BC1D3BA
-CFILE=/home/oracle/Downloads/Wallet_ATPINIT.zip
+ADB_CFILE=/home/oracle/Downloads/Wallet_ATPINIT.zip
+ADB_TARGET=ATP
 ````
 
 #### Make sure all parameters have a value and save the file ####
@@ -454,7 +474,7 @@ INFO: 2020-03-20 16:25:30: ...getting advisor report for schema 'PARKINGFINE', i
  ADB Advisor Version   : 19.3.0.0.1                                                                                                                      
  Instance Name         : DB112                                                                                                                           
  Database Name         : DB112                                                                                                                           
- Host Name             : rp-upgradev10-01                                                                                                                
+ Host Name             : upgradews                                                                                                                
  Database Version      : 11.2.0.4.0                                                                                                                      
  Schemas Analyzed      : PARKINGFINE                                                                                                                     
  Analyzing for         : Autonomous Transaction Processing (Serverless)                                                                                  
@@ -583,7 +603,13 @@ INFO: 2020-03-20 16:36:07: Step 1 - ...drop Object Store Credential
 INFO: 2020-03-20 16:36:10: Step 2 - ...creating Object Store Credential
 INFO: 2020-03-20 16:36:11: Step 3 - ...executing import datapump to ADB
 INFO: 2020-03-20 16:42:48: Moving impdp log 'mv2adb_impdp_20200320-163611.log' to Object Store
-SUCCESS: 2020-03-20 16:42:49: Import data completed without errors.
+SUCCESS: 2020-03-20 16:42:49: Impdp to ADB 'ATPDB' executed successfully
+
+INFO: 2020-03-20 16:42:43: Recompiling schemas on ADB 'ATPDB_high'...
+INFO: 2020-03-20 16:42:43: ...recompiling schema 'PARKINGFINE', it may get some time...
+
+INFO: 2020-03-20 16:42:44: Recompiling schemas on ADB 'ATPDB__high'...
+INFO: 2020-03-20 16:42:44: ...recompiling schema 'PARKINGFINE', it may get some time...
 ````
 
 After about 10 minutes, all the steps should have been executed successfully. 
