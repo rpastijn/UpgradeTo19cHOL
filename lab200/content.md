@@ -174,12 +174,15 @@ $  <copy>mkdir -p /u01/autoupgrade</copy>
 $ <copy>cd /u01/autoupgrade/</copy>
 ````
 
-Now we can create a new configuration file for the Auto Upgrade tool. In this example the `vi` tool is used. If you are not familiar with `vi`, feel free to exchange the com
- CREATE SAMPLE CONFIG FILE FOR THE MIGRATION USING VI OR GEDIT
-[oracle@ws autoupgrade]$ vi DB121C.cfg (or gedit DB121C.cfg)
+Now we can create a new configuration file for the Auto Upgrade tool. In this example the `vi` tool is used. If you are not familiar with `vi`, feel free to exchange the command with `gedit`:
 
-Make sure the following lines are in the new file:
-global.autoupg_log_dir=/u01/autoupgrade
+````
+$ <copy>vi DB121C.cfg</copy>
+````
+
+Make sure to add the following lines to the new file:
+````
+<copy>global.autoupg_log_dir=/u01/autoupgrade
 upg1.dbname=DB121C
 upg1.start_time=NOW
 upg1.source_home=/u01/app/oracle/product/12.1.0/dbhome_121
@@ -189,14 +192,32 @@ upg1.log_dir=/u01/autoupgrade
 upg1.upgrade_node=localhost
 upg1.target_version=19.3
 upg1.run_utlrp=yes
-upg1.timezone_upg=yes
- MAKE SURE YOU HAVE THE DB19C ENVIRONMENT IN YOUR VARIABLES
-[oracle@ws autoupgrade]$ . oraenv
-ORACLE_SID = [ORCL] ? CDB19
-The Oracle base remains unchanged with value /u01/app/oracle
- EXECUTE THE ANALYZE PHASE OF THE AUTO UPGRADE TOOL WITH THE NEW CDB19 ENVIRONMENT
-[oracle@ws autoupgrade]$ java -jar $ORACLE_HOME/rdbms/admin/autoupgrade.jar -config DB121C.cfg -mode analyze -noconsole
+upg1.timezone_upg=yes</copy>
+````
 
+Save the file and close the editor.
+
+## Launch the Auto Upgrade tool pre-check phase ##
+
+We can now launch the Auto upgrade tool. First make sure you have the 19c environment variables setup:
+
+````
+$ <copy>. oraenv</copy>
+````
+````
+ORACLE_SID = [ORCL] ? <copy>CDB19</copy>
+The Oracle base remains unchanged with value /u01/app/oracle
+````
+
+Execute the tool by executing the following command:
+
+````
+$ <copy>java -jar $ORACLE_HOME/rdbms/admin/autoupgrade.jar -config DB121C.cfg -mode analyze -noconsole</copy>
+````
+
+The result should be similar to this:
+
+````
 Autoupgrade tool launched with default options
 +--------------------------------+
 | Starting AutoUpgrade execution |
@@ -204,8 +225,17 @@ Autoupgrade tool launched with default options
 1 databases will be analyzed
 
 Job 100 for CDB121 FINISHED
-In the parameter file we specified the location for the logfiles, in this case /u01/autoupgrade. After running of the command, the output stated a Job number (100). A new directory has been created in the logfile directory with this name; it contains all of the logfiles for this run. In the prechecks directory, the output of the prechecks are displayed in various formats:
-[oracle@ws autoupgrade]$ cat 100/prechecks/db121c_preupgrade.log
+````
+
+In the parameter file we specified the location for the logfiles, in this case `/u01/autoupgrade`. After running of the command, the output stated a Job number (100). A new directory has been created in the logfile directory with this name; it contains all of the logfiles for this run. In the prechecks directory, the output of the prechecks are displayed in various formats:
+
+````
+$ <copy>cat ./100/prechecks/db121c_preupgrade.log</copy>
+````
+
+The result should be similar to the following:
+
+````
 [dbname]          [DB121C]
 ==========================================
 [container]          [CDB$ROOT]
@@ -239,13 +269,21 @@ In the parameter file we specified the location for the logfiles, in this case /
 [action]             Gather stale data dictionary statistics prior to database upgrade
                      in off-peak time using:
                      EXECUTE DBMS_STATS.GATHER_DICTIONARY_STATS;
+````
+
 In a regular upgrade situation, you can now check whether or not there are blocking issues with regards to your upgrade. The step executed here is basically the same as running the preupgrade.jar manually or through the DBUA.
  
-EXECUTE THE UPGRADE
-To continue with the full upgrade of the database(s) in the config file, run the same command but this time with the 'mode=deploy' option. 
- START THE FULL UPGRADE USING THE AUTOUPGRADE FEATURE
-[oracle@ws autoupgrade]$ java -jar $ORACLE_HOME/rdbms/admin/autoupgrade.jar -config DB121C.cfg -mode deploy
+### Execute the full upgrade using Aut Upgrade ###
 
+To continue with the full upgrade of the database(s) in the config file, run the same command but this time with the 'mode=deploy' option. 
+
+````
+$ <copy>java -jar $ORACLE_HOME/rdbms/admin/autoupgrade.jar -config DB121C.cfg -mode deploy</copy>
+````
+
+The output should be similar to the following:
+
+````
 Autoupgrade tool launched with default options
 +--------------------------------+
 | Starting AutoUpgrade execution |
@@ -253,27 +291,50 @@ Autoupgrade tool launched with default options
 1 databases will be processed
 
 upg>
-
+````
 The tool will now upgrade the requested databases in the background. You can request the status by executing the 'lsj' command:
- EXECUTE THE LSJ COMMAND
-upg> lsj
 
+````
+upg> <copy>lsj</copy>
+````
+
+The following is an example output:
+
+````
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+
 |JOB#|DB NAME|    STAGE|OPERATION| STATUS|    START TIME|END TIME| UPDATED|          MESSAGE|
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+
 | 100| DB121C|PRECHECKS|PREPARING|RUNNING|19/04/19 11:51|     N/A|11:51:09|Remaining 198/246|
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+ 
-Using the command prompt, you can do many things to control your upgrade. If there are any failure, you can correct the failures and restart the job or perhaps restore the environment to its original state.
-On the operating system you can check the running of the upgrade as well. You can see for example, (in a second terminal window) you see that the regular tools are being used by the autoupgrade tool for the upgrade:
-[oracle@ws dbs]$ ps -ef | grep perl
+````
 
+Using the command prompt, you can do many things to control your upgrade. If there are any failure, you can correct the failures and restart the job or perhaps restore the environment to its original state. On the operating system you can check the running of the upgrade as well. You can see for example, (in a second terminal window) you see that the regular tools are being used by the autoupgrade tool for the upgrade:
+
+Open a second terminal window and execute the following command:
+
+````
+$ <copy>ps -ef | grep perl</copy>
+````
+
+The output will be similar tot the following (if the `lsj` command is actually doing the upgrade):
+
+````
 oracle   17211 11951  0 10:13 pts/4    00:00:01 /u01/app/oracle/product/19.0.0/dbhome_193/perl/bin/perl /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/catctl.pl -A -l /u01/autoupgrade/100/dbupgrade -i 20190321101158db112 -d /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin catupgrd.sql
-Please note that the perl command will only give you a result if the autoupgrade tool is actually running the perl scripts of course.
-The logfiles in the /u01/autoupgrade/<job#> directory show you the progress as well for example:
-[oracle@upgradews dbs]$ cd /u01/autoupgrade/<job#>
+````
+Please, again, note that the perl command will only give you a result if the autoupgrade tool is actually running the perl scripts of course.
 
-[oracle@upgradews 101]$ tail -f dbupgrade_<Press TAB>.log
+The logfiles in the `/u01/autoupgrade/<job#>` directory show you the progress as well for example:
 
+````
+$ <copy>cd /u01/autoupgrade/</copy><job#>
+````
+````
+$ <copy>tail -f dbupgrade_</copy><Press TAB>.log
+````
+
+The output will be similar to the following:
+
+````
 2019-04-17 12:44:23.670 INFO Finished - Utilities.autoReadFileToAry 
 2019-04-17 12:44:23.670 INFO Finished - Utilities.getPhaseNo 
 2019-04-17 12:44:23.672 INFO [Upgrading] is [92%] completed for [db121c-pdb$seed] 
@@ -285,21 +346,41 @@ The logfiles in the /u01/autoupgrade/<job#> directory show you the progress as w
 | PDB$SEED|                          UPGRADE [92%]|
 | DB121C01|                          UPGRADE [92%]|
 +---------+---------------------------------------+
-The whole upgrade using the options chosen in this lab takes about 120 minutes
+````
+
+**The whole upgrade using the options chosen in this lab takes about 120 minutes**
+You can continue with other labs or let the instructor know you are waiting for the upgrade to finish.
+
+After a while, you will see that the upgrade has finished:
+
+````
 +--------------------------------+
 | Starting AutoUpgrade execution |
 +--------------------------------+
 1 databases will be processed
 
 Job 101 for DB121C FINISHED
-After this your database should be upgraded to 19C. 
- CHECK IF THE DATABASE IS OPEN AND RUNNING:
-[oracle@upgradews ~]$ . oraenv
-ORACLE_SID = [CDB19] ? DB121C
+````
+
+You database is now upgraded to 19c (with all PDBs as well).
+
+## Check target database ##
+
+To check your target database you can execute the following:
+
+````
+$ <copy>. oraenv</copy>
+````
+````
+ORACLE_SID = [CDB19] ? <copy>DB121C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
+````
+````
+$ <copy>sqlplus / as sysdba</copy>
+````
+Although we just set the environment variables for the SID DB121C, the SQL*Plus output already shows that the Autoupgrade tool has changed the `\etc\oratab` file and updated the home for the DB121C database (which is now the 19c database):
 
-[oracle@upgradews ~]$ sqlplus / as sysdba
-
+````
 SQL*Plus: Release 19.0.0.0.0 - Production on Fri Mar 22 16:38:53 2019
 Version 19.3.0.0.0
 
@@ -309,13 +390,21 @@ Copyright (c) 1982, 2019, Oracle.  All rights reserved.
 Connected to:
 Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
 Version 19.3.0.0.0
+````
 
-SQL> select version from v$instance;
+Check the version of the database by querying the `v$instance` view:
 
+````
+SQL> <copy>select version from v$instance;</copy>
+````
+
+The outputwill be similar to this:
+
+```` 
 VERSION
 -----------------
 19.0.0.0.0
-The autoupgrade tool was successful
-You can check the logfiles for details regarding this upgrade now.
-<end of lab>
+````
+The autoupgrade tool was successful. You can check the logfiles for details regarding this upgrade if you want to.
 
+** `End of Lab` **
