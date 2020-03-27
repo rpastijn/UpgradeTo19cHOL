@@ -86,7 +86,7 @@ $ <copy>./runInstaller</copy>
 
 The following screen should be visible on your (remote) desktop:
 
-![](../images/01-OUI-1of9.png)
+![](./images/01-OUI-1of9.png)
  
 - Keep the default 'Create and Configure a single instance database' and press `NEXT`
 - Choose 'Desktop class' and press `NEXT`
@@ -114,13 +114,13 @@ Make sure to check and change the following values in the various fields:
 - Pluggable database name
 	- PDB19C01 **(change this value)**
 
-![](../images/02-OUI-3of9.png)
+![](./images/02-OUI-3of9.png)
 
 - After you have entered the correct values, please press the `NEXT` button to continue.
 
 The following screen should be visible:
 
-![](../images/04-OUI-4of9.png)
+![](./images/04-OUI-4of9.png)
 
 Like previous installations, the `root.sh` script needs to be executed after the relinking and registration of the Oracle Home. This screen lets you decide whether or not you want the OUI to do this for you. In this workshop environment, you can use the root password (`OraclePTS#2019`) for automatic execution of the root.sh script(s). For your local environment (at home), do what is applicable for your situation.
 
@@ -128,25 +128,25 @@ Like previous installations, the `root.sh` script needs to be executed after the
  
 The system will now start checking the prerequisites for the 19c installation.
 
-![](../images/05-OUI-5of9.png)
+![](./images/05-OUI-5of9.png)
 
 If all prerequisites have been checked and no warnings or errors can be found, the summary screen will be displayed:
 
-![](../images/07-OUI-6of9.png)
+![](./images/07-OUI-6of9.png)
 
 - Press the `Install` button to start the installation and database creation.
 
-![](../images/08-OUI-7of9.png)
+![](./images/08-OUI-7of9.png)
 
 After a while, provided there are no issues during the install, the root.sh script needs to be executed. If you have entered the password for the root user in the OUI, permission will be asked to execute the scripts:
 
-![](../images/09-OUI-Pup-up.png)
+![](./images/09-OUI-Pup-up.png)
 
 - Click the `Yes` button to continue
 
 > If you did not provide a root password or sudo information, a different window will be displayed. 
 > 
-> ![](../images/10-OUI-Pop-up-2.png)
+> ![](./images/10-OUI-Pop-up-2.png)
 >
 > If you do not get the option to click `Yes`, please execute the script mentioned in the window as root user in a terminal environment.
  
@@ -156,7 +156,7 @@ If this is a instructor-led class (either on-site or through a Live-Virtual-Clas
 
 After the database creation has finished, the following screen (or similar) will be displayed:
 
-![](../images/11-OUI-8of8.png)
+![](./images/11-OUI-8of8.png)
  
 - Press the `Close` button to end the Universal Installer session.
 
