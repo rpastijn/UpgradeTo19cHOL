@@ -409,4 +409,6 @@ VERSION
 ````
 The autoupgrade tool was successful. You can check the logfiles for details regarding this upgrade if you want to.
 
-** `End of Lab` **
+## Acknowledgements ##
+
+- Author - Robert Pastijn, DB Dev Product Management, PTS EMEA - March 2020

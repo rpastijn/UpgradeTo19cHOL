@@ -656,4 +656,6 @@ COUNT(*)
 
 It seems the migration of our table with over 9 million rows was successful.
 
-** `End of Lab` **
+## Acknowledgements ##
+
+- Author - Robert Pastijn, DB Dev Product Management, PTS EMEA - March 2020

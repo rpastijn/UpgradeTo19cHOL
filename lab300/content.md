@@ -299,4 +299,6 @@ The result should be this:
 
 The migration seems to be successful.
 
-** `End of Lab` **
+## Acknowledgements ##
+
+- Author - Robert Pastijn, DB Dev Product Management, PTS EMEA - March 2020
