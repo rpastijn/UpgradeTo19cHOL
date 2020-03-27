@@ -7,13 +7,13 @@
             "filename":"./about-the-workshop/content.md"
         },
         {
-            "title": "Lab 0: Setup the Lab Environment",
+            "title": "Lab 0: Connect to HOL image",
             "description":"Setup the Lab Environment",
             "publisheddate": "03/20/2020",
             "filename":"./lab000/content.md"
         },
         {
-            "title": "Lab 1: Create destination 19c environment",
+            "title": "Lab 1: Create 19c target",
             "description":"Install software and create a new 19c database",
             "publisheddate": "03/20/2020",
             "filename":"./lab100/content.md"
