@@ -8,6 +8,7 @@ The following is intended to outline our general product direction. It is intend
 ## Prerequisites ##
 
 - You have access to the Upgrade to a 19c Hands-on-Lab client image
+- You have connected to the Hands-on-Lab client image using a Remote Desktop session
 
 ## Prepare 19c software and operating system ##
 
@@ -106,7 +107,7 @@ Make sure to check and change the following values in the various fields:
 - OSBDA group
 	- oinstall (no changes)
 - Global Database name
-	- CDB19 **(change this value)**
+	- DB19C **(change this value)**
 - Password
 	- Welcome_123 **(change this value)**
 - Create as Container database
@@ -138,7 +139,7 @@ If all prerequisites have been checked and no warnings or errors can be found, t
 
 ![](./images/08-OUI-7of9.png)
 
-After a while, provided there are no issues during the install, the root.sh script needs to be executed. If you have entered the password for the root user in the OUI, permission will be asked to execute the scripts:
+After about 5 minutes, provided there are no issues during the install, the root.sh script needs to be executed. If you have entered the password for the root user in the OUI, permission will be asked to execute the scripts:
 
 ![](./images/09-OUI-Pup-up.png)
 
@@ -150,9 +151,9 @@ After a while, provided there are no issues during the install, the root.sh scri
 >
 > If you do not get the option to click `Yes`, please execute the script mentioned in the window as root user in a terminal environment.
  
-The installer will now start to create the new CDB database with its PDB. This can take between 20 and 40 minutes.
+The installer will now start to create the new CDB database with its PDB. This will take between 20 and 40 minutes.
 
-If this is a instructor-led class (either on-site or through a Live-Virtual-Class system) ** Please inform your instructor that you are waiting for the database install to finish ** so he/she can keep track of the progress of the installs and perhaps continue with presentations if everybody is waiting.
+If this is a instructor-led class (either on-site or through a Live-Virtual-Class system) **Please inform your instructor that you are waiting for the database install to finish** so he/she can keep track of the progress of the installs and perhaps cntinue with presentations if everybody is waiting.
 
 After the database creation has finished, the following screen (or similar) will be displayed:
 
@@ -172,19 +173,19 @@ Please execute the following commands as Oracle user:
 $ <copy>. oraenv</copy>
 ````
 ````
-ORACLE_SID = [oracle] ? <copy>CDB19</copy>
+ORACLE_SID = [oracle] ? <copy>DB19C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle\
 ````
 ````
 $ <copy>sqlplus / as sysdba</copy>
 ````
 ````
-SQL> <copy>alter system set sga_max_size=4G scope=spfile;</copy>
+SQL> <copy>alter system set sga_max_size=2G scope=spfile;</copy>
 
 System altered.
 ````
 ````
-SQL> <copy>alter system set sga_target=4G scope=spfile;</copy>
+SQL> <copy>alter system set sga_target=2G scope=spfile;</copy>
 
 System altered.
 ````
@@ -206,15 +207,17 @@ Redo Buffers                7630848 bytes
 Database mounted.
 Database opened.
 ````
-````
-SQL> <copy>alter pluggable database all open;</copy>
 
-Pluggable database altered.
+We can now close SQLPlus:
+
+````
+SQL> <copy>exit</copy>
 ````
 
-Your database is now ready for the Hands-On labs.
+Your container database and your environment is now ready for the Hands-On labs.
 
 ## Acknowledgements ##
 
-- **Author** - Robert Pastijn, Database Product Management, PTS EMEA - March 2020
+- **Author** - Robert Pastijn, Database Product Management, PTS EMEA - initial version March 2019
+- **Migrated to Github** - Robert Pastijn, Database Product Management, PTS EMEA - April 2020
 

@@ -8,6 +8,8 @@ The following is intended to outline our general product direction. It is intend
 ## Prerequisites ##
 
 - You have access to the Upgrade to a 19c Hands-on-Lab client image
+- If you use the copy functionality in this lab, make sure you open the Lab instructions INSIDE the client image
+	- When copied outside of the client image, additional *returns* can be placed between the lines which makes the command fail
 - A new 19c database has been created in this image
 - All databases in the image are running
 
@@ -48,7 +50,7 @@ $ <copy>. oraenv</copy>
 Enter the SID for the 19c environment you already created in a previous lab:
 
 ````
-ORACLE_SID = [DB112] ? CDB19
+ORACLE_SID = [DB112] ? DB19C
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 
@@ -61,26 +63,20 @@ $ <copy>sqlplus / as sysdba</copy>
 ### Create a new PDB called PDB19C02 ###
 
 ````
-SQL> <copy>create pluggable database PDB19C02
-     admin user admin identified by Welcome_123
-     file_name_convert=('pdbseed','PDB19C02');</copy>
-````
+SQL> <copy>create pluggable database PDB19C02 admin user admin identified by Welcome_123 file_name_convert=('pdbseed','PDB19C02');</copy>
 
-````
 Pluggable database created.
 ````
 
 In the above example we choose the location for the filenames by using the file_name_convert clause. Another option would have been setting the PDB_FILE_NAME_CONVERT init.ora parameter or have Oracle sort it out using Oracle Managed Files.
 
-The files for this PDB have been created in /u01/oradata/CDB19C/PDB19C02
+The files for this PDB have been created in /u01/oradata/DB19C/PDB19C02
 
 After creating the new PDB, we need to start it so it can be used as a target for our migration:
 
 ````
 SQL> <copy>alter pluggable database PDB19C02 open;</copy>
-````
 
-````
 Pluggable database altered.
 ````
 
@@ -90,25 +86,32 @@ The migration described in this lab requires a directory object for Datapump and
 
 ````
 SQL> <copy>alter session set container=PDB19C02;</copy>
+
+Session altered.
 ````
 ````
 SQL> <copy>create directory homedir as '/home/oracle';</copy>
+
+Directory created.
 ````
 ````
 SQL> <copy>grant read, write on directory homedir to system;</copy>
+
+Grant succeeded.
 ````
 ````
-SQL> <copy>create public database link SOURCEDB
-     connect to system identified by Welcome_123
+SQL> <copy>create public database link SOURCEDB 
+     connect to system identified by Welcome_123 
      using '//localhost:1521/DB122';</copy>
+
+Database link created.
 ````
 
 We can check the database link to see if it works by querying a remote table:
 
 ````
 SQL> <copy>select instance_name from v$instance@sourcedb;</copy>
-````
-````
+
 INSTANCE_NAME
 ----------------
 DB122
@@ -169,7 +172,7 @@ Connect to the source 12.2 environment and start SQL*Plus as sysdba:
 $ <copy>. oraenv</copy>
 ````
 ````
-ORACLE_SID = [CDB19] ? <copy>DB122</copy>
+ORACLE_SID = [DB19C] ? <copy>DB122</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 
@@ -179,21 +182,20 @@ We can now login the user sys as sysdba:
 $ <copy>sqlplus / as sysdba</copy>
 ````
 
-### Set tablespace to READ ONLY and determina datafiles ###
+### Set tablespace to READ ONLY and determine datafiles ###
 
-Change the tablespace USERS to READ ONLY to prepare it for transportation to the target database. Remember, in this example we only have data in the USERS tablespace. If you do this in another environment, determine all tablespaces applicable using dba_objects and dba_segments.
+Change the tablespace USERS (so basically all tablespaces that contain user data) to READ ONLY to prepare it for transportation to the target database. Remember, in this example we only have data in the USERS tablespace. If you do this in another environment, determine all tablespaces applicable using dba_objects and dba_segments.
 
 ````
 SQL> <copy>alter tablespace USERS READ ONLY;</copy>
+
+Tablespace altered.
 ````
-    Tablespace altered.
 
 We can now determine the datafiles that we need to copy to the target environment as part of the Transportable Tablespaces. We will only transport those tablespaces that contain user data:
 
 ````
-SQL> <copy>select name 
-     from v$datafile
-     where ts# in (select ts# 
+SQL> <copy>select name from v$datafile where ts# in (select ts# 
                    from v$tablespace 
                    where name='USERS');</copy>
 ````
@@ -217,7 +219,7 @@ SQL> <copy>exit</copy>
 First we simply copy the files to the location we will use for the 19c target PDB:
 
 ````
-$ <copy>cp /u01/oradata/DB122/users01.dbf /u01/oradata/CDB19/PDB19C02</copy>
+$ <copy>cp /u01/oradata/DB122/users01.dbf /u01/oradata/DB19C/PDB19C02</copy>
 ````
 
 Now we can import the metadata of the database and the data (already copied and ready in the datafiles for the tablespace USERS in the new location) by executing a Datapump command. The Datapump import will be run through the database link you created earlier – thus no need for an file-based export or a dumpfile. Data Pump will take care of everything (currently except XDB and AWR) you need from the system tablepaces and move views, synonyms, trigger etc over to the target database (in our case: PDB19C02). Data Pump can do this beginning from Oracle 11.2.0.3 on the source side but will require an Oracle 12c database as target. This will work cross platform as well!!! (For cross-platform moves we would use RMAN backups and convert them if necessary.)
@@ -228,7 +230,7 @@ First we change our environment parameters back to 19c:
 $ <copy>. oraenv</copy>
 ````
 ````
-ORACLE_SID = [DB122] ? <copy>CDB19</copy>
+ORACLE_SID = [DB122] ? <copy>DB19C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 
@@ -237,7 +239,7 @@ We can now start the actual import process.
 ````
 $ <copy>impdp system/Welcome_123@//localhost:1521/PDB19C02 network_link=sourcedb \
         full=y transportable=always metrics=y exclude=statistics logfile=homedir:db122ToPdb.log \
-        transport_datafiles='/u01/oradata/CDB19/PDB19C02/users01.dbf'</copy>
+        logtime=all transport_datafiles='/u01/oradata/DB19C/PDB19C02/users01.dbf'</copy>
 ````
 
 A similar output should be visible:

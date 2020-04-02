@@ -18,13 +18,13 @@ $ <copy>. oraenv</copy>
 ````
 Please enter the SID of the 19c database that you have created in the first lab. In this example, the SID is **`19C`**
 ````
-ORACLE_SID = [oracle] ? DB19C
+ORACLE_SID = [oracle] ? <copy>DB19C</copy>
 The Oracle base has been set to /u01/app/oracle
 ````
 Now execute the command to start all databases listed in the `/etc/oratab` file:
 
 ````
-$ </copy>dbstart $ORACLE_HOME</copy>
+$ <copy>dbstart $ORACLE_HOME</copy>
 ````
 
 The output should be similar to this:
@@ -38,7 +38,7 @@ Processing Database instance "DB18C": log file /u01/app/oracle/product/18.1.0/db
 ## Prepare the Source database ##
 One of the prerequisites for auto upgrade is that that database should be in **archive log mode**. The databases in our Workshop environment are not in archivelog mode, first step is to change this. We will use the preinstalled 12.1.0.2 database for this exercise (although we could have used the 11.2 database).
 
-### Change source database into Archive Log mode ###
+### Open all PDBS ###
 
 First, we set the environment variables for the 12.1 source environment:
 
@@ -56,76 +56,6 @@ We can now log into SQL*Plus as sys user in sysdba mode:
 $ <copy>sqlplus / as sysdba</copy>
 ````
 
-After connecting, check the Archive Log status for this database:
-
-````
-SQL> <copy>archive log list</copy>
-````
-The result will most probably be the following:
-
-````
-Database log mode              No Archive Mode
-Automatic archival             Disabled
-Archive destination            USE_DB_RECOVERY_FILE_DEST
-Oldest online log sequence     83
-Current log sequence           85
-````
-
-If the output shows, like the above example, that the database is in `No Archive Mode`, enable Archive Log mode by executing the following steps:
-
-1.	Shutdown the database
-2.	Start database in mount mode
-3.	Enable archive log mode
-4.	Enable flashback mode
-5.	Open (fully start) the database
-6.	Check database status
-
-````
-SQL> <copy>shutdown immediate</copy>
-
-Database closed.
-Database dismounted.
-ORACLE instance shut down.
-````
-````
-SQL> <copy>startup mount</copy>
-ORACLE instance started.
-
-Total System Global Area 1603411968 bytes
-Fixed Size                  2253664 bytes
-Variable Size             469765280 bytes
-Database Buffers         1124073472 bytes
-Redo Buffers                7319552 bytes
-Database mounted.
-````
-````
-SQL> <copy>alter database archivelog;</copy>
-
-Database altered.
-````
-````
-SQL> <copy>alter database flashback on;</copy>
-
-Database altered.
-````
-````
-SQL> <copy>alter database open;</copy>
-
-Database altered.
-````
-````
-SQL> <copy>archive log list</copy>
-
-Database log mode              Archive Mode
-Automatic archival             Enabled
-Archive destination            USE_DB_RECOVERY_FILE_DEST
-Oldest online log sequence     83
-Next log sequence to archive   85
-Current log sequence           85
-````
-
-### Open all PDBS ###
-
 The upgrade commands will only upgrade databases (and Pluggable Databases) that are in OPEN mode during the upgrade process. Therefore please check that all PDBs are in OPEN mode before you start the upgrade.
 
 ````
@@ -138,10 +68,9 @@ The following will probably be visible:
 ---------- ------------------------------ ---------- ----------
          2 PDB$SEED                       READ ONLY  NO
          3 DB121C01                       MOUNTED
-         4 DB121C02                       MOUNTED
 ````
 
-This means we need to open the PDBs first. Execute the following commands:
+This means we need to open the PDB first. Execute the following commands:
 
 ````
 SQL> <copy>alter pluggable database all open;</copy>
@@ -158,7 +87,15 @@ SQL> <copy>show pdbs</copy>
 ---------- ------------------------------ ---------- ----------
          2 PDB$SEED                       READ ONLY  NO
          3 DB121C01                       READ WRITE NO
-         4 DB121C02                       READ WRITE NO
+````
+
+You can now exit SQLPlus and continue on the operating system:
+
+````
+SQL> <copy>exit</copy>
+
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
 ````
 
 ## Prepare and run the Autoupgrade tool ##
@@ -186,7 +123,6 @@ Make sure to add the following lines to the new file:
 ````
 <copy>global.autoupg_log_dir=/u01/autoupgrade
 upg1.dbname=DB121C
-upg1.start_time=NOW
 upg1.source_home=/u01/app/oracle/product/12.1.0/dbhome_121
 upg1.target_home=/u01/app/oracle/product/19.0.0/dbhome_193
 upg1.sid=DB121C
@@ -195,9 +131,14 @@ upg1.upgrade_node=localhost
 upg1.target_version=19.3
 upg1.run_utlrp=yes
 upg1.timezone_upg=yes</copy>
+upg1.restoration=no
 ````
 
 Save the file and close the editor.
+
+Be aware that in the above example, we used the `upg1.restoration=no`. This means that we will **not be able to restore** the database if something goes bad. This setting is only to be used in databases which are in NOARCHIVE mode or databases (like Standard Edition databases) who cannot have a guaranteed restore point (GRP).
+
+In our setup, we use it to speed up the upgrade process (since no archivelog needs to be written) and to save disk space in our limited environment.
 
 ### Launch the Auto Upgrade tool pre-check phase ###
 
@@ -207,7 +148,7 @@ We can now launch the Auto upgrade tool. First make sure you have the 19c enviro
 $ <copy>. oraenv</copy>
 ````
 ````
-ORACLE_SID = [ORCL] ? <copy>CDB19</copy>
+ORACLE_SID = [ORCL] ? <copy>DB19C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 
@@ -271,11 +212,14 @@ The result should be similar to the following:
 [action]             Gather stale data dictionary statistics prior to database upgrade
                      in off-peak time using:
                      EXECUTE DBMS_STATS.GATHER_DICTIONARY_STATS;
+....
 ````
 
 In a regular upgrade situation, you can now check whether or not there are blocking issues with regards to your upgrade. The step executed here is basically the same as running the preupgrade.jar manually or through the DBUA.
+
+In this hands-on lab, no changes are required so we can continue with the actual upgrade process.
  
-### Execute the full upgrade using Aut Upgrade ###
+### Execute the full upgrade using Auto Upgrade ###
 
 To continue with the full upgrade of the database(s) in the config file, run the same command but this time with the 'mode=deploy' option. 
 
@@ -310,19 +254,83 @@ The following is an example output:
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+ 
 ````
 
-Using the command prompt, you can do many things to control your upgrade. If there are any failure, you can correct the failures and restart the job or perhaps restore the environment to its original state. On the operating system you can check the running of the upgrade as well. You can see for example, (in a second terminal window) you see that the regular tools are being used by the autoupgrade tool for the upgrade:
+Using the command prompt, you can do many things to control your upgrade. If there are any failure, you can correct the failures and restart the job or perhaps restore the environment to its original state. On the operating system you can check the running of the upgrade as well. 
 
-Open a second terminal window and execute the following command:
+To get a more detailed status of the job, you can use the `status` command with the job number of your upgrade. Example:
+
+````
+upg> <copy>status -job 101</copy>
+Progress
+-----------------------------------
+Start time:      19/04/19 12:10
+Elapsed (min):   15
+End time:        N/A
+Last update:     2019-04-19T12:10:09.421
+Stage:           DBUPGRADE
+Operation:       EXECUTING
+Status:          RUNNING
+Pending stages:  4
+Stage summary:
+    SETUP             <1 min
+    PREUPGRADE        <1 min
+    PRECHECKS         <1 min
+    PREFIXUPS         <1 min
+    DRAIN             <1 min
+    DBUPGRADE         14 min (IN PROGRESS)
+
+Job Logs Locations
+-----------------------------------
+Logs Base:    /u01/autoupgrade/DB121C
+Job logs:     /u01/autoupgrade/DB121C/101
+Stage logs:   /u01/autoupgrade/DB121C/101/dbupgrade
+TimeZone:     /u01/autoupgrade/DB121C/temp
+
+Additional information
+-----------------------------------
+Details:
+[Upgrading] is [37%] completed for [db121c-cdb$root]
+                 +---------+---------------+
+                 |CONTAINER|     PERCENTAGE|
+                 +---------+---------------+
+                 | CDB$ROOT|  UPGRADE [37%]|
+                 | PDB$SEED|UPGRADE PENDING|
+                 | DB121C01|UPGRADE PENDING|
+                 +---------+---------------+
+
+Error Details:
+None
+````
+
+The actual upgrade will be done using the regular tools for upgrading databases. You can see this in the operating system once the `lsj` command indicates that the actual upgrade has started:
+
+````
+upg> <copy>lsj</copy>
+````
+
+If you see that the actual database upgrade is running like this:
+
+````
+upg> lsj
++----+-------+---------+---------+-------+--------------+--------+--------+-------+
+|JOB#|DB NAME|    STAGE|OPERATION| STATUS|    START TIME|END TIME| UPDATED|MESSAGE|
++----+-------+---------+---------+-------+--------------+--------+--------+-------+
+| 101| DB121C|DBUPGRADE|EXECUTING|RUNNING|19/04/19 12:06|     N/A|12:05:51|Running|
++----+-------+---------+---------+-------+--------------+--------+--------+-------+
+````
+
+You can open a second terminal window (do not close the running autoupgrade tool) that the regular tools are being used by the autoupgrade tool for the upgrade:
+
 
 ````
 $ <copy>ps -ef | grep perl</copy>
 ````
 
-The output will be similar tot the following (if the `lsj` command is actually doing the upgrade):
+The output will be similar tot the following:
 
 ````
 oracle   17211 11951  0 10:13 pts/4    00:00:01 /u01/app/oracle/product/19.0.0/dbhome_193/perl/bin/perl /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/catctl.pl -A -l /u01/autoupgrade/100/dbupgrade -i 20190321101158db112 -d /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin catupgrd.sql
 ````
+
 Please, again, note that the perl command will only give you a result if the autoupgrade tool is actually running the perl scripts of course.
 
 The logfiles in the `/u01/autoupgrade/<job#>` directory show you the progress as well for example:
@@ -351,6 +359,7 @@ The output will be similar to the following:
 ````
 
 **The whole upgrade using the options chosen in this lab takes about 120 minutes**
+
 You can continue with other labs or let the instructor know you are waiting for the upgrade to finish.
 
 After a while, you will see that the upgrade has finished:
@@ -374,7 +383,7 @@ To check your target database you can execute the following:
 $ <copy>. oraenv</copy>
 ````
 ````
-ORACLE_SID = [CDB19] ? <copy>DB121C</copy>
+ORACLE_SID = [DB19C] ? <copy>DB121C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 ````
@@ -411,4 +420,4 @@ The autoupgrade tool was successful. You can check the logfiles for details rega
 
 ## Acknowledgements ##
 
-- Author - Robert Pastijn, DB Dev Product Management, PTS EMEA - March 2020
+- **Author** - Robert Pastijn, DB Dev Product Management, PTS EMEA - April 2020
