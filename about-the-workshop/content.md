@@ -51,3 +51,5 @@ Upgrade and migrate to Autonomous Database Cloud requires some separate steps. T
 ![](./images/menu.png "")
 
 - You may close the menu by clicking ![](./images/menu-close.png "")
+
+- **Author** - Robert Pastijn, Database Product Management, PTS EMEA - April 2020
