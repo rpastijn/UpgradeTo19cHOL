@@ -20,13 +20,13 @@ $ <copy>. oraenv</copy>
 ````
 Please enter the SID of the 19c database that you have created in the first lab. In this example, the SID is **`19C`**
 ````
-ORACLE_SID = [oracle] ? DB19C
+ORACLE_SID = [oracle] ? <copy>DB19C</copy>
 The Oracle base has been set to /u01/app/oracle
 ````
 Now execute the command to start all databases listed in the `/etc/oratab` file:
 
 ````
-$ </copy>dbstart $ORACLE_HOME</copy>
+$ <copy>dbstart $ORACLE_HOME</copy>
 ````
 
 The output should be similar to this:
@@ -35,6 +35,7 @@ Processing Database instance "DB112": log file /u01/app/oracle/product/11.2.0/db
 Processing Database instance "DB121C": log file /u01/app/oracle/product/12.1.0/dbhome_121/rdbms/log/startup.log
 Processing Database instance "DB122": log file /u01/app/oracle/product/12.2.0/dbhome_122/rdbms/log/startup.log
 Processing Database instance "DB18C": log file /u01/app/oracle/product/18.1.0/dbhome_18c/rdbms/log/startup.log
+Processing Database instance "DB19C": log file /u01/app/oracle/product/19.3.0/dbhome_19c/rdbms/log/startup.log
 ````
 
 ## Prepare the target 19c database ##
@@ -68,11 +69,9 @@ SQL> <copy>create pluggable database PDB19C02 admin user admin identified by Wel
 Pluggable database created.
 ````
 
-In the above example we choose the location for the filenames by using the file_name_convert clause. Another option would have been setting the PDB_FILE_NAME_CONVERT init.ora parameter or have Oracle sort it out using Oracle Managed Files.
+In the above example we choose the location for the filenames by using the file_name_convert clause. Another option would have been setting the `PDB_FILE_NAME_CONVERT` init.ora parameter or have Oracle sort it out using Oracle Managed Files.
 
-The files for this PDB have been created in /u01/oradata/DB19C/PDB19C02
-
-After creating the new PDB, we need to start it so it can be used as a target for our migration:
+The files for this PDB have been created in `/u01/oradata/DB19C/PDB19C02` as a result of our create pluggable database command. After creating the new PDB, we need to start it so it can be used as a target for our migration:
 
 ````
 SQL> <copy>alter pluggable database PDB19C02 open;</copy>
@@ -180,6 +179,13 @@ We can now login the user sys as sysdba:
 
 ````
 $ <copy>sqlplus / as sysdba</copy>
+
+SQL*Plus: Release 12.2.0.1.0 Production on Fri Apr 3 12:06:17 2020
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
 ````
 
 ### Set tablespace to READ ONLY and determine datafiles ###
@@ -208,7 +214,9 @@ NAME
 /u01/oradata/DB122/users01.dbf
 ````
 
-Now that we have put the source tablespace to READ ONLY and know which datafiles we need to copy, we can copy the files to the target location. In this example, we will copy the files but we could also have moved the files. If you copy the files, you have a fall-back scenario in case something goes wrong (by simply changing the source tablespace to READ WRITE again). Downside is that you need extra diskspace to hold the copy of the datafiles.
+Now that we have put the source tablespace to READ ONLY and know which datafiles we need to copy, we can copy or move the files to the target location. In our example, we will copy the files but we could also have moved the files. 
+
+If you copy the files, you have a fall-back scenario in case something goes wrong (by simply changing the source tablespace to READ WRITE again). Downside is that you need extra diskspace to hold the copy of the datafiles.
 
 Please exit SQL*Plus and disconnect from the source database.
 ````
@@ -222,7 +230,9 @@ First we simply copy the files to the location we will use for the 19c target PD
 $ <copy>cp /u01/oradata/DB122/users01.dbf /u01/oradata/DB19C/PDB19C02</copy>
 ````
 
-Now we can import the metadata of the database and the data (already copied and ready in the datafiles for the tablespace USERS in the new location) by executing a Datapump command. The Datapump import will be run through the database link you created earlier – thus no need for an file-based export or a dumpfile. Data Pump will take care of everything (currently except XDB and AWR) you need from the system tablepaces and move views, synonyms, trigger etc over to the target database (in our case: PDB19C02). Data Pump can do this beginning from Oracle 11.2.0.3 on the source side but will require an Oracle 12c database as target. This will work cross platform as well!!! (For cross-platform moves we would use RMAN backups and convert them if necessary.)
+Now we can import the metadata of the database and the data (already copied and ready in the datafiles for the tablespace USERS in the new location) by executing a Datapump command. The Datapump import will be run through the database link you created earlier – thus no need for an file-based export or a dumpfile. 
+
+Data Pump will take care of everything (currently except XDB and AWR) you need from the system tablepaces and move views, synonyms, trigger etc over to the target database (in our case: PDB19C02). Data Pump can do this beginning from Oracle 11.2.0.3 on the source side but will require an Oracle 12c database as target. This will work cross platform as well but might need RMAN to convert the files from big to little endian or vice-versa. 
 
 First we change our environment parameters back to 19c:
 
@@ -245,34 +255,64 @@ $ <copy>impdp system/Welcome_123@//localhost:1521/PDB19C02 network_link=sourcedb
 A similar output should be visible:
 
 ````
-Import: Release 19.0.0.0.0 - Production on Wed Mar 20 13:18:36 2019
+Import: Release 19.0.0.0.0 - Production on Fri Apr 3 12:09:40 2020
 Version 19.3.0.0.0
 
 Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
 
 Connected to: Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
-Starting "SYSTEM"."SYS_IMPORT_FULL_01":  system/********@//localhost:1521/PDB19C02 network_link=sourcedb full=y t                                                                                                   ransportable=always metrics=y exclude=statistics logfile=homedir:db122ToPdb.log transport_datafiles=/u01/oradata/                                                                                                   CDB19/PDB19C02/users01.dbf
-W-1 Startup took 1 seconds
-W-1 Estimate in progress using BLOCKS method...
-W-1 Processing object type DATABASE_EXPORT/PLUGTS_FULL/FULL/PLUGTS_TABLESPACE
-W-1      Completed 0 PLUGTS_TABLESPACE objects in 5 seconds
-...
-W-1 Processing object type DATABASE_EXPORT/POST_SYSTEM_IMPCALLOUT/MARKER
-W-1      Completed 1 MARKER objects in 2 seconds
-W-1      Completed 1 DATABASE_EXPORT/EARLY_OPTIONS/VIEWS_AS_TABLES/TABLE_DATA objects in 0 seconds
-W-1      Completed 51 DATABASE_EXPORT/NORMAL_OPTIONS/TABLE_DATA objects in 14 seconds
-W-1      Completed 18 DATABASE_EXPORT/NORMAL_OPTIONS/VIEWS_AS_TABLES/TABLE_DATA objects in 20 seconds
-W-1      Completed 7 DATABASE_EXPORT/SCHEMA/TABLE/TABLE_DATA objects in 3 seconds
-Job "SYSTEM"."SYS_IMPORT_FULL_01" completed with 6 error(s) at Wed Mar 20 13:21:58 2019 elapsed 0 00:03:22
+03-APR-20 12:09:50.511: Starting "SYSTEM"."SYS_IMPORT_FULL_01":  system/********@//localhost:1521/PDB19C02 network_link=sourcedb full=y transportable=always metrics=y exclude=statistics logfile=homedir:db122ToPdb.log logtime=all transport_datafiles=/u01/oradata/DB19C/PDB19C02/users01.dbf
+03-APR-20 12:09:52.170: W-1 Startup took 2 seconds
+03-APR-20 12:09:52.297: W-1 Estimate in progress using BLOCKS method...
+03-APR-20 12:09:57.870: W-1 Processing object type DATABASE_EXPORT/PLUGTS_FULL/FULL/PLUGTS_TABLESPACE
+03-APR-20 12:09:57.993: W-1      Completed 0 PLUGTS_TABLESPACE objects in 5 seconds
+03-APR-20 12:09:57.993: W-1 Processing object type DATABASE_EXPORT/PLUGTS_FULL/PLUGTS_BLK
+03-APR-20 12:10:00.343: W-1      Completed 1 PLUGTS_BLK objects in 3 seconds
+03-APR-20 12:10:00.343: W-1 Processing object type DATABASE_EXPORT/EARLY_OPTIONS/VIEWS_AS_TABLES/TABLE_DATA
+03-APR-20 12:10:02.984: W-1      Estimated 1 TABLE_DATA objects in 4 seconds
+03-APR-20 12:10:02.984: W-1 Processing object type DATABASE_EXPORT/NORMAL_OPTIONS/TABLE_DATA
+03-APR-20 12:10:03.636: W-1      Estimated 63 TABLE_DATA objects in 3 seconds
+(etc)
+
+03-APR-20 12:14:01.118: W-1      Completed 1 DATABASE_EXPORT/EARLY_OPTIONS/VIEWS_AS_TABLES/TABLE_DATA objects in 0 seconds
+03-APR-20 12:14:01.120: W-1      Completed 51 DATABASE_EXPORT/NORMAL_OPTIONS/TABLE_DATA objects in 22 seconds
+03-APR-20 12:14:01.122: W-1      Completed 18 DATABASE_EXPORT/NORMAL_OPTIONS/VIEWS_AS_TABLES/TABLE_DATA objects in 25 seconds
+03-APR-20 12:14:01.124: W-1      Completed 7 DATABASE_EXPORT/SCHEMA/TABLE/TABLE_DATA objects in 3 seconds
+03-APR-20 12:14:01.397: Job "SYSTEM"."SYS_IMPORT_FULL_01" completed with 6 error(s) at Fri Apr 3 12:14:01 2020 elapsed 0 00:04:15
 ````
 
-Usually you will find errors when using FTTS. By checking the logfile, you need to determine if the errors have a negative impact on your environment. In our migration, the errors should be only a few users that could not be created. The most important user we have in this database (PARKINGFINE) should have been migrated. We can check the target database to see if our table has been imported like it should:
+Usually you will find errors when using FTTS:
+
+````
+03-APR-20 12:11:15.770: ORA-39083: Object type PROCACT_SCHEMA failed to create with error:
+ORA-31625: Schema SPATIAL_CSW_ADMIN_USR is needed to import this object, but is unaccessible
+ORA-01435: user does not exist
+
+or
+
+03-APR-20 12:11:44.837: ORA-39342: Internal error - failed to import internal objects tagged with ORDIM due to ORA-00955: name is already used by an existing object
+````
+
+By checking the logfile, you need to determine if the errors have a negative impact on your environment. In our migration, the errors should be only a few users that could not be created. 
+
+The most important user we have in this database (PARKINGFINE) should have been migrated. We can check the target database to see if our table has been imported like it should:
 
 ````
 $ <copy>sqlplus / as sysdba</copy>
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Fri Apr 3 12:14:44 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
 ````
 ````
 SQL> <copy>alter session set container=PDB19C02;</copy>
+
+Session altered.
 ````
 ````
 SQL> <copy>select table_name from dba_tables where owner='PARKINGFINE';</copy>

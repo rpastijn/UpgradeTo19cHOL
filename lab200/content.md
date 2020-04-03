@@ -33,10 +33,11 @@ Processing Database instance "DB112": log file /u01/app/oracle/product/11.2.0/db
 Processing Database instance "DB121C": log file /u01/app/oracle/product/12.1.0/dbhome_121/rdbms/log/startup.log
 Processing Database instance "DB122": log file /u01/app/oracle/product/12.2.0/dbhome_122/rdbms/log/startup.log
 Processing Database instance "DB18C": log file /u01/app/oracle/product/18.1.0/dbhome_18c/rdbms/log/startup.log
+Processing Database instance "DB19C": log file /u01/app/oracle/product/19.3.0/dbhome_19c/rdbms/log/startup.log
 ````
  
 ## Prepare the Source database ##
-One of the prerequisites for auto upgrade is that that database should be in **archive log mode**. The databases in our Workshop environment are not in archivelog mode, first step is to change this. We will use the preinstalled 12.1.0.2 database for this exercise (although we could have used the 11.2 database).
+We will use the preinstalled 12.1.0.2 database for this exercise (although we could have used the 11.2 database or any other database).
 
 ### Open all PDBS ###
 
@@ -130,8 +131,8 @@ upg1.log_dir=/u01/autoupgrade
 upg1.upgrade_node=localhost
 upg1.target_version=19.3
 upg1.run_utlrp=yes
-upg1.timezone_upg=yes</copy>
-upg1.restoration=no
+upg1.timezone_upg=yes
+upg1.restoration=no</copy>
 ````
 
 Save the file and close the editor.
@@ -161,19 +162,27 @@ $ <copy>java -jar $ORACLE_HOME/rdbms/admin/autoupgrade.jar -config DB121C.cfg -m
 The result should be similar to this:
 
 ````
-Autoupgrade tool launched with default options
+AutoUpgrade tool launched with default options
+Processing config file ...
 +--------------------------------+
 | Starting AutoUpgrade execution |
 +--------------------------------+
 1 databases will be analyzed
+Job 100 completed
+------------------- Final Summary --------------------
+Number of databases            [ 1 ]
 
-Job 100 for CDB121 FINISHED
+Jobs finished successfully     [1]
+Jobs failed                    [0]
+Jobs pending                   [0]
+------------- JOBS FINISHED SUCCESSFULLY -------------
+Job 100 for DB121C
 ````
 
 In the parameter file we specified the location for the logfiles, in this case `/u01/autoupgrade`. After running of the command, the output stated a Job number (100). A new directory has been created in the logfile directory with this name; it contains all of the logfiles for this run. In the prechecks directory, the output of the prechecks are displayed in various formats:
 
 ````
-$ <copy>cat ./100/prechecks/db121c_preupgrade.log</copy>
+$ <copy>cat /u01/autoupgrade/DB121C/100/prechecks/db121c_preupgrade.log</copy>
 ````
 
 The result should be similar to the following:
@@ -235,6 +244,7 @@ Autoupgrade tool launched with default options
 | Starting AutoUpgrade execution |
 +--------------------------------+
 1 databases will be processed
+Type 'help' to list console commands
 
 upg>
 ````
@@ -250,7 +260,7 @@ The following is an example output:
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+
 |JOB#|DB NAME|    STAGE|OPERATION| STATUS|    START TIME|END TIME| UPDATED|          MESSAGE|
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+
-| 100| DB121C|PRECHECKS|PREPARING|RUNNING|19/04/19 11:51|     N/A|11:51:09|Remaining 198/246|
+| 101| DB121C|PRECHECKS|PREPARING|RUNNING|19/04/19 11:51|     N/A|11:51:09|Remaining 198/246|
 +----+-------+---------+---------+-------+--------------+--------+--------+-----------------+ 
 ````
 

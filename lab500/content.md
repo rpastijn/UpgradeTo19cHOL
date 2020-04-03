@@ -18,7 +18,7 @@ $ <copy>. oraenv</copy>
 ````
 Please enter the SID of the 19c database that you have created in the first lab. In this example, the SID is **`19C`**
 ````
-ORACLE_SID = [oracle] ? DB19C
+ORACLE_SID = [oracle] ? <copy>DB19C</copy>
 The Oracle base has been set to /u01/app/oracle
 ````
 Now execute the command to start all databases listed in the `/etc/oratab` file:
@@ -33,6 +33,7 @@ Processing Database instance "DB112": log file /u01/app/oracle/product/11.2.0/db
 Processing Database instance "DB121C": log file /u01/app/oracle/product/12.1.0/dbhome_121/rdbms/log/startup.log
 Processing Database instance "DB122": log file /u01/app/oracle/product/12.2.0/dbhome_122/rdbms/log/startup.log
 Processing Database instance "DB18C": log file /u01/app/oracle/product/18.1.0/dbhome_18c/rdbms/log/startup.log
+Processing Database instance "DB19C": log file /u01/app/oracle/product/19.3.0/dbhome_19c/rdbms/log/startup.log
 ````
 
 ## Download and install the required tools ##
@@ -44,10 +45,7 @@ The MV2ADB tool is an .rpm package and needs to be installed as the root user.
 
 ````
 [oracle@ws ~]$ <copy>sudo yum -y localinstall /source/mv2adb*.rpm</copy>
-````
-You should see a similar output:
 
-````
 Loaded plugins: langpacks, ulninfo
 Examining /source/mv2adb-2.0.1-80.noarch.rpm: mv2adb-2.0.1-80.noarch
 Marking /source/mv2adb-2.0.1-80.noarch.rpm to be installed
@@ -95,18 +93,23 @@ Make sure the directory 19.6 exists and that the directory has contents by execu
 
 ````
 $ <copy>ls -l /opt/instantclient/19.6/</copy>
+
+[oracle@upgradews-4 ~]$ ls -l /opt/instantclient/19.6/
+total 645368
+-rwxr-xr-x 1 root root     41840 Mar 31 13:55 adrci
+-r-xr-xr-x 1 root root      5780 Mar 31 13:55 BASIC_LICENSE
+-rw-r--r-- 1 root root      1632 Mar 31 13:55 BASIC_README
+-rwxr-xr-x 1 root root   1018928 Mar 31 13:55 exp
+-rwxr-xr-x 1 root root    220624 Mar 31 13:55 expdp
+-rwxr-xr-x 1 root root     59312 Mar 31 13:55 genezi
+-rw-r--r-- 1 root root       342 Mar 31 13:55 glogin.sql
+-rwxr-xr-x 1 root root    502464 Mar 31 13:55 imp
+-rwxr-xr-x 1 root root    232752 Mar 31 13:55 impdp
+-rwxr-xr-x 1 root root   8049064 Mar 31 13:55 libclntshcore.so.19.1
+...
+-rwxr-xr-x 1 root root    750992 Mar 31 13:55 wrc
+-rw-r--r-- 1 root root     74263 Mar 31 13:55 xstreams.jar
 ````
-
-Output similar to the following should be visible:
-
-    [oracle@upgradews-4 ~]$ ls -l /opt/instantclient/19.6/
-    total 235040
-    -rwxr-xr-x 1 oracle oinstall 40617 Jun 28 2018 adrci
-    -rw-r--r-- 1 oracle oinstall 1317 Jun 28 2018 BASIC_README
-    -rwxr-xr-x 1 oracle oinstall 1066102 Jun 28 2018 exp
-    -rwxr-xr-x 1 oracle oinstall 228672 Jun 28 2018 expdp
-    -rwxr-xr-x 1 oracle oinstall 57556 Jun 28 2018 genezi
-    ...
 
 ## Create a new Autonomous Database ##
 
@@ -122,10 +125,16 @@ Execute the following steps:
 	- Enter the Tenancy name and submit
 	- Enter the username and password supplied and press submit
 
+![](./images/01-CloudTenant.png)
+
+![](./images/02-LoginOCI.png)
+
 When logged in, execute the following steps
 
 - Use the left side menu (stacked menu or hamburger menu)
 - Navigate to the Autonomous Transaction Processing menu
+
+![](./images/03-ATP-Menu.png)
 
 In this menu, you can see the databases currently running and you can create new databases. 
 
@@ -136,27 +145,34 @@ Since Oracle has several regions in the world to host the databases and your adm
 - Datacenter Region
 	- Like US West (Phoenix) or Germany Central (Frankfurt)
 	- Correct region can be found on your hand-out
+
+![](./images/04-Region.png)
+
 - Compartment
 	- By default the (root) compartment is selected
 	- Select the Compartment you have access to
 	- Correct compartment can be found on your hand-out
 	- Compartment name in PTS workshops has the format `ADB-COMPARTMENT-<city>-<date>`
+
+![](./images/05-Compartment.png)
  
 ### Create a new Autonomous Transaction Processing database ###
 
 By clicking on the blue 'Create Autonomous Database' button, the wizard will display that helps you with the creation. Enter the following values for your new database:
 
-    Workload Type    : Autonomous Transaction Processing
-    Compartment	     : <keep value>
-    Display Name     : ATP-<your-name>
-    Database Name    : ATP<your-initials>
-    Database version : 19c
-    CPU Core Count   : 1
-    Storage (TB)     : 1
-    Autoscaling      : unchecked
-    Password         : OraclePTS#2019
-    Network Access   : Allow secure access from everywhere
-    License Type     : Bring Your Own License (BYOL)
+````
+Workload Type    : Autonomous Transaction Processing
+Compartment      : <keep value>
+Display Name     : ATP-<your-name>
+Database Name    : ATP<your-initials>
+Database version : 19c
+CPU Core Count   : 1
+Storage (TB)     : 1
+Autoscaling      : unchecked
+Password         : OraclePTS#2019
+Network Access   : Allow secure access from everywhere
+License Type     : Bring Your Own License (BYOL)
+````
 
 After this, click on the **'Create Autonomous Database'** button to start the process. This process should not take more than a few minutes to complete. 
 
@@ -175,10 +191,15 @@ Execute the following steps:
 - Make sure you are logged into the OCI Cloud console
 - Use the left side menu (stacked menu or hamburger menu)
 - Navigate to the Object Storage menu
+
+![](./images/06-Bucket.png)
+
 - Make sure you are working in the correct region
 - Make sure you have selected the correct compartment
 
 To create a new bucket (which behaves similar to a subdirectory in a filesystem), click on the blue **'Create Bucket'** button. A 'Create Bucket' window will be displayed where you can enter the Bucket name.
+
+![](./images/07-BucketCreate.png)
 
 - Do not use the default name
 - Enter a unique name that you can remember
@@ -200,7 +221,8 @@ In this section will we create an initial configuration file. Some parameters ha
 
 Text editing on the supplied Linux image can be done using any tool you know in the image like `vi` (for people who know how vi works) or for example `gedit` which works similar to Notepad in a Windows environment. In all examples in this Lab where you see `vi` used, you can replace `vi` by `gedit`.
 
-If you are currently not logged in as the root user, execute the following command:
+If you are currently not logged in as the root user, execute the following command as either `oracle` or `opc` user:
+
 ````
 $ <copy>sudo -s</copy>
 ````
@@ -236,6 +258,7 @@ ADB_CFILE=
 ADB_TARGET=ATP
 </copy>
 ````
+
 <!-- ADB_TARGET=ATP is needed because of issue with 11g database/sqlplus. Has been logged as a bug -->
 
 <!-- Removed because of issues with 11g and encryption
@@ -243,7 +266,6 @@ ADB_TARGET=ATP
 ENC_PASSWORD=53152A9726C00647158CD4B1E103F1F2
 ENC_TYPE=AES256
 -->
-
 
 In the next sections we will locate the required parameters and put them in this config file. Please keep this config file open but save it on a regular basis so that no information is lost if something goes wrong. If you need to access the Operating System, please open a second terminal window.
 
@@ -426,9 +448,7 @@ The file should be in the `/opt/mv2adb/conf` directory and is called `ATP.mv2adb
 
 ````
 # <copy>ls -l /opt/mv2adb/conf</copy>
-````
 
-````
 total 12
 -rw-r--r-- 1 root root  471 May 17 13:13 ATP.mv2adb.conf
 -rwxr-xr-x 1 root root 5159 Dec 28 12:52 DBNAME.mv2adb.cfg
@@ -557,10 +577,7 @@ Now we can start the actual migration by starting the MV2ADB tool using the prop
 
 ````
 $ <copy>/opt/mv2adb/mv2adb auto -conf /opt/mv2adb/conf/ATP.mv2adb.conf</copy>
-````
 
-
-````
 INFO: 2020-03-20 16:34:40: Please check the logfile '/opt/mv2adb/out/log/mv2adb_30698.log' for more details
 
 --------------------------------------------------------

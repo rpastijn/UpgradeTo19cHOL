@@ -163,7 +163,7 @@ After the database creation has finished, the following screen (or similar) will
 
 Your 19c Oracle Home has been created and the initial database (CDB19) has been started.
 
-## Change default memory parameters ##
+## Change default memory parameters and perform administration ##
 
 The OUI takes a certain percentage of the available memory in our environment as default SGA size. In our workshop environment, this is an SGA of 18G. We need the memory for other tasks (databases) later on so we will need to lower the memory usage of the new instance:
 
@@ -178,14 +178,24 @@ The Oracle base remains unchanged with value /u01/app/oracle\
 ````
 ````
 $ <copy>sqlplus / as sysdba</copy>
+
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Thu Apr 2 11:39:20 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
 ````
 ````
-SQL> <copy>alter system set sga_max_size=2G scope=spfile;</copy>
+SQL> <copy>alter system set sga_max_size=1300M scope=spfile;</copy>
 
 System altered.
 ````
 ````
-SQL> <copy>alter system set sga_target=2G scope=spfile;</copy>
+SQL> <copy>alter system set sga_target=1300M scope=spfile;</copy>
 
 System altered.
 ````
@@ -199,11 +209,11 @@ ORACLE instance shut down.
 SQL> <copy>startup</copy>
 ORACLE instance started.
 
-Total System Global Area 4294964632 bytes
-Fixed Size                  9143704 bytes
-Variable Size             855638016 bytes
-Database Buffers         3422552064 bytes
-Redo Buffers                7630848 bytes
+Total System Global Area 1375728872 bytes
+Fixed Size                  9135336 bytes
+Variable Size             385875968 bytes
+Database Buffers          973078528 bytes
+Redo Buffers                7639040 bytes
 Database mounted.
 Database opened.
 ````
@@ -212,6 +222,25 @@ We can now close SQLPlus:
 
 ````
 SQL> <copy>exit</copy>
+````
+
+### Upgrade autoupgrade.jar file ###
+
+For the autoupgrade lab, we need to put the latest version in the new 19c Oracle home. Please execute the following commands:
+
+````
+$ <copy>mv /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/autoupgrade.jar /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/autoupgrade.jar.org</copy>
+````
+````
+$ <copy>cp /source/autoupgrade.jar /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/</copy>
+````
+
+### Make your 19c database startup using dbstart ###
+
+If you shutdown your Hands-On-Lab environment, you will need to start the databases again. To make this automatic (using the 
+
+````
+$ <copy>sudo sed -i 's/:N/:Y/' /etc/oratab</copy>
 ````
 
 Your container database and your environment is now ready for the Hands-On labs.

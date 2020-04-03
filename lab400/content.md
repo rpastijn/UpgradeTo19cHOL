@@ -18,13 +18,13 @@ $ <copy>. oraenv</copy>
 ````
 Please enter the SID of the 19c database that you have created in the first lab. In this example, the SID is **`19C`**
 ````
-ORACLE_SID = [oracle] ? DB19C
+ORACLE_SID = [oracle] ? <copy>DB19C</copy>
 The Oracle base has been set to /u01/app/oracle
 ````
 Now execute the command to start all databases listed in the `/etc/oratab` file:
 
 ````
-$ </copy>dbstart $ORACLE_HOME</copy>
+$ <copy>dbstart $ORACLE_HOME</copy>
 ````
 
 The output should be similar to this:
@@ -33,6 +33,7 @@ Processing Database instance "DB112": log file /u01/app/oracle/product/11.2.0/db
 Processing Database instance "DB121C": log file /u01/app/oracle/product/12.1.0/dbhome_121/rdbms/log/startup.log
 Processing Database instance "DB122": log file /u01/app/oracle/product/12.2.0/dbhome_122/rdbms/log/startup.log
 Processing Database instance "DB18C": log file /u01/app/oracle/product/18.1.0/dbhome_18c/rdbms/log/startup.log
+Processing Database instance "DB19C": log file /u01/app/oracle/product/19.3.0/dbhome_19c/rdbms/log/startup.log
 ````
 
 ## Check the current status of the source PDBs ##
@@ -47,7 +48,7 @@ $ <copy>. oraenv</copy>
 Enter the database 18c SID when requested:
 
 ````
-ORACLE_SID = [oracle] ? DB18C
+ORACLE_SID = [oracle] ? <copy>DB18C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 
@@ -55,9 +56,7 @@ Now we can login as sysdba and check the status of the database
 
 ````
 $ <copy>sqlplus / as sysdba</copy>
-````
 
-````
 SQL*Plus: Release 18.0.0.0.0 - Production on Fri Mar 22 16:45:06 2019
 Version 18.3.0.0.0
 
@@ -72,11 +71,7 @@ We can check the status of the PDBs in this container database using the command
 
 ````
 SQL> <copy>show pdbs</copy>
-````
 
-Output similar to the following should be displayed:
-
-````
     CON_ID CON_NAME                       OPEN MODE  RESTRICTED
 ---------- ------------------------------ ---------- ----------
          2 PDB$SEED                       READ ONLY  NO
@@ -98,19 +93,15 @@ Execute the following command to unplug the PDB and write an .xml descriptor fil
 
 ````
 SQL> <copy>alter pluggable database PDB18C01 unplug into '/u01/PDB18C01.xml';</copy>
+
+Pluggable database altered.
 ````
-
-The following result should be visible:
-
-    Pluggable database altered.
 
 We will now disconnect from the source database so we can continue with the import of the PDB.
 
 ````
 SQL> <copy>exit</copy>
-````
 
-````
 Disconnected from Oracle Database 18c Enterprise Edition Release 18.0.0.0.0 - Production
 Version 18.3.0.0.0
 ````
@@ -120,13 +111,13 @@ Version 18.3.0.0.0
 First, we need to change the environment settings to the 19c environment:
 
 ````
-# <copy>. oraenv</copy>
+$ <copy>. oraenv</copy>
 ````
 
 Please enter the SID of the 19c database when asked:
 
 ````
-ORACLE_SID = [DB18C] ? CDB19
+ORACLE_SID = [DB18C] ? <copy>DB19C</copy>
 The Oracle base remains unchanged with value /u01/app/oracle
 ````
 
@@ -134,9 +125,7 @@ We can now login with SQL*Plus as sysdba to execute the import of the PDB:
 
 ````
 $ <copy>sqlplus / as sysdba</copy>
-````
 
-````
 SQL*Plus: Release 19.0.0.0.0 - Production on Mon Mar 25 13:48:55 2019
 Version 19.3.0.0.0
 
@@ -153,11 +142,9 @@ After connecting as sysdba to the target database, we can plug in the PDB. As pa
 SQL> <copy>create pluggable database PDB18C01 using '/u01/PDB18C01.xml'
      move
      file_name_convert = ('/DB18C/','/CDB19/');</copy>
+
+Pluggable database created.
 ````
-
-The result should be this:
-
-    Pluggable database created.
 
 The `move` clause means that all relevant files should be moved to the new location. Using the `file_name_convert`, you can determine what the new location should be.
 
@@ -166,9 +153,7 @@ Check that our datafiles are stored in the 19c datafile location:
 ````
 SQL> <copy>select name from v$datafile
      where name like '%18C01%';</copy>
-````
 
-````
 NAME
 -------------------------------------------
 /u01/oradata/CDB19/PDB18C01/system01.dbf
@@ -187,9 +172,9 @@ To upgrade the PDB, first open it in upgrade mode:
 
 ````
 SQL> <copy>alter pluggable database PDB18C01 open upgrade;</copy>
-````
 
-    Pluggable database altered.
+Pluggable database altered.
+````
 
 We now need to upgrade the pluggable database as the PDB also contains a data dictionary and objects (which are still of the old version). When you upgrade a PDB, you use the commands you normally use with the Parallel Upgrade Utility. However, you also add the option **`-c PDBname`** to specify which PDB you are upgrading. 
 
@@ -217,7 +202,7 @@ Do not run in                C = 0
 Input Directory              d = /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin
 ...
 ````
-After about 30 minutes the upgrade will be done:
+After about 30 minutes the upgrade will be done (longer if you have other upgrades running in parallel):
 ````
 ...
 Serial   Phase #:105  [PDB18C01] Files:1    Time: 1s
@@ -250,29 +235,36 @@ After the upgrade, the PDB will be left in a `CLOSED` or `MOUNT` state. Before w
 
 ````
 $ <copy>sqlplus / as sysdba</copy>
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Mon Mar 25 13:48:55 2019
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
 ````
 
 After logging in, we can change the pluggable database to normal `open` mode:
 
 ````
 SQL> <copy>alter pluggable database PDB18C01 open;</copy>
+
+Pluggable database altered.
 ````
-
-The following should be visible:
-
-    Pluggable database altered.
 
 If no errors occur, we can login with SQL*Plus and check the invalid objects in the database:
 
 ````
 SQL> <copy>alter session set container=PDB18C01;</copy>
+
+Session altered.
 ````
 
 ````
 SQL> <copy>select COUNT(*) FROM obj$ WHERE status IN (4, 5, 6);</copy>
-````
 
-````
   COUNT(*)
 ----------
       1467
@@ -282,11 +274,6 @@ If there are any invalid objects, you can recompile them using the `utlrp.sql` s
 
 ````
 SQL> <copy>@$ORACLE_HOME/rdbms/admin/utlrp.sql</copy>
-````
-
-A similar output should be visible:
-
-````
 
 Session altered.
 
