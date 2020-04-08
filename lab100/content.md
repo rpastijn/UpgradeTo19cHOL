@@ -161,7 +161,7 @@ After the database creation has finished, the following screen (or similar) will
  
 - Press the `Close` button to end the Universal Installer session.
 
-Your 19c Oracle Home has been created and the initial database (CDB19) has been started.
+Your 19c Oracle Home has been created and the initial database (DB19C) has been started.
 
 ## Change default memory parameters and perform administration ##
 

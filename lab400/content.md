@@ -141,7 +141,7 @@ After connecting as sysdba to the target database, we can plug in the PDB. As pa
 ````
 SQL> <copy>create pluggable database PDB18C01 using '/u01/PDB18C01.xml'
      move
-     file_name_convert = ('/DB18C/','/CDB19/');</copy>
+     file_name_convert = ('/DB18C/','/DB19C/');</copy>
 
 Pluggable database created.
 ````
@@ -156,13 +156,13 @@ SQL> <copy>select name from v$datafile
 
 NAME
 -------------------------------------------
-/u01/oradata/CDB19/PDB18C01/system01.dbf
-/u01/oradata/CDB19/PDB18C01/sysaux01.dbf
-/u01/oradata/CDB19/PDB18C01/undotbs01.dbf
-/u01/oradata/CDB19/PDB18C01/users01.dbf
+/u01/oradata/DB19C/PDB18C01/system01.dbf
+/u01/oradata/DB19C/PDB18C01/sysaux01.dbf
+/u01/oradata/DB19C/PDB18C01/undotbs01.dbf
+/u01/oradata/DB19C/PDB18C01/users01.dbf
 ````
 
-The above example also shows that it is a **bad** custom to put the version name of the PDB in the name of the PDB. As displayed, it looks really strange to have a `PDB18C01` in the CDB19 location.
+The above example also shows that it is a **bad** custom to put the version name of the PDB in the name of the PDB. As displayed, it looks really strange to have a `PDB18C01` in the DB19C location.
 
 ## Upgrade the imported Pluggable Database ##
 
