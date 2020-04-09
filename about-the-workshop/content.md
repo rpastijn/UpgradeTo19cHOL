@@ -26,7 +26,7 @@ We need a 19c database and listener as target for our remaining labs. Also, crea
 
 - **Lab 2 :** Upgrade using the new AutoUpgrade tool
 
-The new Auto Upgrade tool is a wrapper around the regular upgrade steps and scripts. But the configuration fail is easy to setup and allows multiple databases to be upgraded at the same time while still keeping track of the status. If things go wrong, you can rollback the upgrade or restart the upgrade after you have solved the blocking issue.
+The new Auto Upgrade tool is a wrapper around the regular upgrade steps and scripts. But the configuration file is easy to setup and allows multiple databases to be upgraded at the same time while still keeping track of the status. If things go wrong, you can rollback the upgrade or restart the upgrade after you have solved the blocking issue.
 
 - **Lab 3 :** Upgrade using Full Transportable Tablespaces
 
