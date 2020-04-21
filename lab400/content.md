@@ -89,8 +89,7 @@ There are many ways to migrate a PDB to a new CDB. Some will keep the datafiles 
 
 In the following lab, we will keep the datafiles on the same system but move them to another location. This can be done in a single command from SQL*Plus. After the migration to the new location, we can upgrade the PDB.
 
-### UNPLUG THE PDB ###
-In the next example we assume you are already connected as sysdba to the DB18C database as described in the previous chapter.
+For the next steps, we assume you are already connected as sysdba to the DB18C database as described in the previous chapter.
 
 Execute the following command to unplug the PDB and write an .xml descriptor file to a filesystem location. 
 
