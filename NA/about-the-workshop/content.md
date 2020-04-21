@@ -48,4 +48,6 @@ One of the nice new features of Multitenancy is to simply unplug and plug a Plug
 
 - You may close the menu by clicking ![](./images/menu-close.png "")
 
+## Acknowledgements ##
+
 - **Author** - Robert Pastijn, Database Product Management, PTS EMEA - April 2020
