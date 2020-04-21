@@ -23,14 +23,60 @@ To complete this lab, you need the following account credentials and assets:
 
 ## Connect to the remote Hands-On Lab client image ##
 
-The HOL lab was written based on the applications available through a Remote Desktop session on the client.
+The HOL lab was written based on the applications available through a Remote Desktop session on the client. For this, you need to have the Remote Desktop application available on your system.
 
-- Please connect to the Remote Desktop session provided for you
-	- Locate the image IP address on the handout
-	- use the Remote Desktop client to connect
-	- Accept any certificate warnings that might be displayed
-- Login as `oracle` user
-	- Use the password as indicated on the handout
+### Windows ###
+
+Please press the Windows/Start button and search for the following application:
+
+![](../images/01-RDPapp.png)
+
+> If you cannot find this application, please start the Microsoft Store on your laptop and install it through the Microsoft store. The application is free to download and install.
+
+After starting the application, the following screen should be visible:
+
+![](../images/02-RDPLogin.png)
+
+Enter the supplied IP address for your remote environment into the `Computer` text field. No other ports or parameters are needed.
+
+Optionally, you can click on the `Show Options` drop-down box to select additional preferences. 
+
+>Experience has shown us that the best `Display` setting is `Full Screen`. After logging in, start a new browser session in the Remote Desktop environment and read the labs in that location
+![](../images/03-RDPScreen.png)
+
+After pressing the `Connect` button, the Remote Desktop session will be started. This can take a couple of seconds. 
+
+>You can see some warnings regarding certificates; please accept or ignore them as no certificates have been generated for this temporary environment.
+>[](../images/04-RDPTrust.png)
+
+### MacOS ###
+
+> Issues have been reported with RDP clients from other providers than Microsoft. If you encounter issues with your local RDP client, please install the Microsoft RDP client from the Mac store.
+> ![](../images/06-MAC-store.png)
+
+Locate and start the Remote Desktop application. A similar screen to this will be visible:
+
+![](../images/08-MAC-RDPscreen.png)
+
+Create a new entry for your remote environment:
+
+![](../images/09-MAC-Details.png)
+
+Enter the supplied IP address for your remote environment into the `PC Name` text field. No other ports or parameters are needed.
+
+>Experience has shown us that the best way to work is in `Full Screen` mode. After logging in, start a new browser session in the Remote Desktop environment and continue using the labs through the Remote Desktop browser.
+
+>You can see some warnings regarding certificates; please accept or ignore them as no certificates have been generated for this temporary environment.
+
+## Login to Linux system after connection ##
+
+After a succesful connection, you will see another login screen:
+
+![](../images/05-RDPxRDP.png)
+
+Please enter the supplied username and password for this session. After pressing the `Ok` button, you will login to the Linux environment and see the Remote Desktop desktop.
+
+In case of issues, please contact your instructor.
 
 ## Optional: Using SSH to connect to the image ##
 
