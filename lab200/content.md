@@ -2,6 +2,8 @@
 
 In this lab we will leverage the Autoupgrade tool and upgrade an existing 12.1 CDB with 2 PDBs to 19c in a single command and configuration file.. 
 
+> **Warning** on copying and pasting commands with multiple lines from the browser screen; when you copy from outside of the Remote Desktop environment and paste inside the Remote Desktop environment, additional **enters** or CRLF characters are pasted causing some commands to fail. Solution: Open this lab inside the browser inside the Remote Desktop session.
+
 ## Disclaimer ##
 The following is intended to outline our general product direction. It is intended for information purposes only, and may not be incorporated into any contract. It is not a commitment to deliver any material, code, or functionality, and should not be relied upon in making purchasing decisions. The development, release, and timing of any features or functionality described for Oracle’s products remains at the sole discretion of Oracle.
 
@@ -343,10 +345,10 @@ oracle   17211 11951  0 10:13 pts/4    00:00:01 /u01/app/oracle/product/19.0.0/d
 
 Please, again, note that the perl command will only give you a result if the autoupgrade tool is actually running the perl scripts of course.
 
-The logfiles in the `/u01/autoupgrade/<job#>` directory show you the progress as well for example:
+The logfiles in the `/u01/autoupgrade/DB121C/<job#>` directory show you the progress as well for example:
 
 ````
-$ <copy>cd /u01/autoupgrade/</copy><job#>
+$ <copy>cd /u01/autoupgrade/DB121C/</copy><job#>
 ````
 ````
 $ <copy>tail -f dbupgrade_</copy><Press TAB>.log
