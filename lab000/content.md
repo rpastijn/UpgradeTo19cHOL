@@ -14,7 +14,9 @@ To complete this lab, you need the following account credentials and assets:
 	- Access details (username, password, ip address) will be made available to you
 - Remote Desktop Client compatible with our Remote Desktop Server
 	- Windows 7 or lower: Remote Desktop Client version 8.1 or higher
+		- [https://support.microsoft.com/en-gb/help/2923545/update-for-rdp-8-1-is-available-for-windows-7-sp1](https://support.microsoft.com/en-gb/help/2923545/update-for-rdp-8-1-is-available-for-windows-7-sp1 "https://support.microsoft.com/en-gb/help/2923545/update-for-rdp-8-1-is-available-for-windows-7-sp1")
 	- Windows 10: Remote Desktop Client from the Microsoft Store
+		- [https://www.microsoft.com/en-gb/p/microsoft-remote-desktop/9wzdncrfj3ps](https://www.microsoft.com/en-gb/p/microsoft-remote-desktop/9wzdncrfj3ps "https://www.microsoft.com/en-gb/p/microsoft-remote-desktop/9wzdncrfj3ps")
 	- MacOS: Only use the Remote Desktop Client provided by Microsoft (available in the iTunes store)
 
 > ** Please do not use any of the credentials until the lab instructs you to **
@@ -53,6 +55,7 @@ After pressing the `Connect` button, the Remote Desktop session will be started.
 
 > Issues have been reported with RDP clients from other providers than Microsoft. If you encounter issues with your local RDP client, please install the Microsoft RDP client from the Mac store.
 > ![](./images/06-MAC-store.png)
+> Optional link to the Mac Store app: [https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12](https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12 "https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12")
 
 Locate and start the Remote Desktop application. A similar screen to this will be visible:
 
@@ -91,9 +94,11 @@ You are allowed to add your own public key to the `authorized_keys` file in the 
 
 **All labs depend on the 19c installation in lab 1**
 
-- There is no dependency between lab 2, lab 3, lab 4 and lab 5. 
-
-Therefore, please continue with your hands-on experience by running the steps in Lab 1.
+- There is no dependency between the labs after lab 1
+- Please continue with your hands-on experience by running the steps in Lab 1.
+- After finishing Lab 1, continue as instructed to the next Lab or choose an interesting lab
+	- If one lab is executing the upgrade, you can start another Lab if you want to
+	- Every Lab has its own instances and versions so even the upgrade can run in parallel
 
 ## Acknowledgements ##
 
