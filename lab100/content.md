@@ -226,20 +226,9 @@ We can now close SQLPlus:
 SQL> <copy>exit</copy>
 ````
 
-### Upgrade autoupgrade.jar file ###
-
-For the autoupgrade lab, we need to put the latest version in the new 19c Oracle home. Please execute the following commands:
-
-````
-$ <copy>mv /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/autoupgrade.jar /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/autoupgrade.jar.org</copy>
-````
-````
-$ <copy>cp /source/autoupgrade.jar /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/</copy>
-````
-
 ### Make your 19c database startup using dbstart ###
 
-If you shutdown your Hands-On-Lab environment, you will need to start the databases again. To make this automatic (using the 
+If you shutdown your Hands-On-Lab environment, you will need to start the databases again. To make this automatic (using the dbstart command) you can change the oratab file for the new database:
 
 ````
 $ <copy>sudo sed -i 's/:N/:Y/' /etc/oratab</copy>

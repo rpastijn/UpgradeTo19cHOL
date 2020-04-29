@@ -103,6 +103,19 @@ With the Partitioning, OLAP, Advanced Analytics and Real Application Testing opt
 
 ## Prepare and run the Autoupgrade tool ##
 
+### Upgrade autoupgrade.jar file ###
+
+For the autoupgrade lab, we need to put the latest version in the new 19c Oracle home. You can download the latest version from MOS. In the client image for this workshop, a new version is already available.
+
+Please execute the following commands:
+
+````
+$ <copy>mv /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/autoupgrade.jar /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/autoupgrade.jar.org</copy>
+````
+````
+$ <copy>cp /source/autoupgrade.jar /u01/app/oracle/product/19.0.0/dbhome_193/rdbms/admin/</copy>
+````
+
 ### Create the Auto Upgrade Config file ###
  
 The Auto Upgrade tool is part of the 19c Oracle Home distribution. Previous versions (<= 18.4) will need a separate download and setup from MyOracle Support under note 2485457.1. In this example we will only put one database into the configuration file but you can add as many databases as needed.
