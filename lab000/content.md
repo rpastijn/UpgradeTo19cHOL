@@ -18,10 +18,12 @@ To complete this lab, you need the following account credentials and assets:
 	- Windows 10: Remote Desktop Client from the Microsoft Store
 		- [https://www.microsoft.com/en-gb/p/microsoft-remote-desktop/9wzdncrfj3ps](https://www.microsoft.com/en-gb/p/microsoft-remote-desktop/9wzdncrfj3ps "https://www.microsoft.com/en-gb/p/microsoft-remote-desktop/9wzdncrfj3ps")
 	- MacOS: Only use the Remote Desktop Client provided by Microsoft (available in the iTunes store)
+		- [https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12](https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12 "https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12")
 
-> ** Please do not use any of the credentials until the lab instructs you to **
 
-> ** Do NOT log into the OCI console and/or create cloud resources until the lab instructs you to **
+> **Please do not use any of the credentials until the lab instructs you to.**
+
+> **Do NOT log into the OCI console and/or create cloud resources until the lab instructs you to.**
 
 ## Connect to the remote Hands-On Lab client image ##
 
@@ -53,9 +55,8 @@ After pressing the `Connect` button, the Remote Desktop session will be started.
 
 ### MacOS ###
 
-> Issues have been reported with RDP clients from other providers than Microsoft. If you encounter issues with your local RDP client, please install the Microsoft RDP client from the Mac store.
+> Issues have been reported with RDP clients from other providers than Microsoft. If you encounter issues with your local RDP client, please install the Microsoft RDP client from the Mac store. See link in the Requirements section.
 > ![](./images/06-MAC-store.png)
-> Optional link to the Mac Store app: [https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12](https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12 "https://apps.apple.com/us/app/microsoft-remote-desktop-10/id1295203466?mt=12")
 
 Locate and start the Remote Desktop application. A similar screen to this will be visible:
 
