@@ -358,13 +358,13 @@ oracle   17211 11951  0 10:13 pts/4    00:00:01 /u01/app/oracle/product/19.0.0/d
 
 Please, again, note that the perl command will only give you a result if the autoupgrade tool is actually running the perl scripts of course.
 
-The logfiles in the `/u01/autoupgrade/DB121C/<job#>` directory show you the progress as well for example:
+The logfiles in the `/u01/autoupgrade/DB121C/[job#]` directory show you the progress as well for example:
 
 ````
-$ <copy>cd /u01/autoupgrade/DB121C/</copy><job#>
+$ <copy>cd /u01/autoupgrade/DB121C/101</copy>
 ````
 ````
-$ <copy>tail -f dbupgrade_</copy><Press TAB>.log
+$ <copy>tail -f autoupgrade_</copy>(Press TAB).log
 ````
 
 The output will be similar to the following:
