@@ -668,7 +668,7 @@ Enter the following details:
 After connecting, a new SQL Window will be displayed. Here you can execute queries on the ATP environment.
 
 ````
-<copy>select count(*) from parkingfine.parking_violations</copy>
+<copy>select count(*) from parkingfine.parking_citations</copy>
 ````
 
 After clicking on the green arrow in the SQL Window, the query will be executed. The result of the query should be similar to this:
