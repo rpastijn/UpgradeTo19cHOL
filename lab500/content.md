@@ -452,13 +452,13 @@ ADB_TARGET=ATP
 
 #### Make sure all parameters have a value and save the file ####
 
-The file should be in the `/opt/mv2adb/conf` directory and is called `ATP.mv2adb.conf`
+The file should be in the `/opt/mv2adb/conf` directory and is called `ATP.mv2adb.cfg`
 
 ````
 # <copy>ls -l /opt/mv2adb/conf</copy>
 
 total 12
--rw-r--r-- 1 root root  471 May 17 13:13 ATP.mv2adb.conf
+-rw-r--r-- 1 root root  471 May 17 13:13 ATP.mv2adb.cfg
 -rwxr-xr-x 1 root root 5159 Dec 28 12:52 DBNAME.mv2adb.cfg
 ````
 
@@ -469,7 +469,7 @@ Not everything is supported in the Autonomous Database Cloud environment. To mak
 Execute the following command as root user and check the output:
 
 ````
-# <copy>/opt/mv2adb/mv2adb advisor -conf /opt/mv2adb/conf/ATP.mv2adb.conf</copy>
+# <copy>/opt/mv2adb/mv2adb advisor -conf /opt/mv2adb/conf/ATP.mv2adb.cfg</copy>
 ````
 
 Output similar as below should be displayed:
@@ -486,7 +486,7 @@ Author: Ruggero Citton <ruggero.citton@oracle.com>
 RAC Pack, Cloud Innovation and Solution Engineering Team
 --------------------------------------------------------
 
-INFO: 2020-03-20 16:25:28: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.conf'
+INFO: 2020-03-20 16:25:28: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.cfg'
 INFO: 2020-03-20 16:25:28: Due to ADB_TARGET skipping online Cloud Service Type check
 INFO: 2020-03-20 16:25:28: Using Oracle Home '/u01/app/oracle/product/11.2.0/dbhome_112'
 INFO: 2020-03-20 16:25:28: Target Cloud Service Type is 'ATP'
@@ -584,7 +584,7 @@ In this output, you can see that the schema PARKINGFINE has no issues with table
 Now we can start the actual migration by starting the MV2ADB tool using the proper options. Execute the following command as root user:
 
 ````
-$ <copy>/opt/mv2adb/mv2adb auto -conf /opt/mv2adb/conf/ATP.mv2adb.conf</copy>
+$ <copy>/opt/mv2adb/mv2adb auto -conf /opt/mv2adb/conf/ATP.mv2adb.cfg</copy>
 
 INFO: 2020-03-20 16:34:40: Please check the logfile '/opt/mv2adb/out/log/mv2adb_30698.log' for more details
 
@@ -597,7 +597,7 @@ Author: Ruggero Citton <ruggero.citton@oracle.com>
 RAC Pack, Cloud Innovation and Solution Engineering Team
 --------------------------------------------------------
 
-INFO: 2020-03-20 16:34:40: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.conf'
+INFO: 2020-03-20 16:34:40: Reading the configuration file '/opt/mv2adb/conf/ATP.mv2adb.cfg'
 INFO: 2020-03-20 16:34:44: Checking schemas on source DB
 INFO: 2020-03-20 16:34:44: Performing schema expdp for 'PARKINGFINE' from source DB...
 INFO: 2020-03-20 16:34:44: Step 1 - ...getting ADB parallelism
