@@ -23,10 +23,16 @@ Please enter the SID of the 19c database that you have created in the first lab.
 ORACLE_SID = [oracle] ? <copy>DB19C</copy>
 The Oracle base has been set to /u01/app/oracle
 ````
+
+> Bugfix: Due to a known issue in this environment, please execute the following statement as oracle user before starting the databases:
+````
+$ <copy>mkdir /u01/archive/DB112</copy>
+````
+
 Now execute the command to start all databases listed in the `/etc/oratab` file:
 
 ````
-$ </copy>dbstart $ORACLE_HOME</copy>
+$ <copy>dbstart $ORACLE_HOME</copy>
 ````
 
 The output should be similar to this:
