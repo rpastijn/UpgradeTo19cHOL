@@ -121,11 +121,12 @@ Make sure to check and change the following values in the various fields:
 
 - After you have entered the correct values, please press the `NEXT` button to continue.
 
+Like previous installations, the `root.sh` script needs to be executed after the relinking and registration of the Oracle Home. This screen lets you decide whether or not you want the OUI to do this for you. In this workshop environment, you can use the root password (`OraclePTS#2019`) for automatic execution of the root.sh script(s). For your local environment (at home), do what is applicable for your situation.
+
 The following screen should be visible:
 
 ![](./images/04-OUI-4of9.png)
 
-Like previous installations, the `root.sh` script needs to be executed after the relinking and registration of the Oracle Home. This screen lets you decide whether or not you want the OUI to do this for you. In this workshop environment, you can use the root password (`OraclePTS#2019`) for automatic execution of the root.sh script(s). For your local environment (at home), do what is applicable for your situation.
 
 - Check the option to automatically execute the configuration scripts and enter the root password `OraclePTS#2019`
  

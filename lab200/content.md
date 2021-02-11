@@ -365,6 +365,8 @@ $ <copy>cd /u01/autoupgrade/DB121C/101</copy>
 ````
 ````
 $ <copy>tail -f autoupgrade_</copy>(Press TAB).log
+
+Your filename should be like autoupgrade_<date>.log
 ````
 
 The output will be similar to the following:

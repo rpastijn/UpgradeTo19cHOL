@@ -237,7 +237,7 @@ $ <copy>sudo -s</copy>
 
 Create the new configuration file by executing the following command:
 ````
-# <copy>vi /opt/mv2adb/conf/atp.mv2adb.cfg</copy>
+# <copy>vi /opt/mv2adb/conf/ATP.mv2adb.cfg</copy>
 ````
 
 Cut-and-paste the following default setup file in the new config file:
